@@ -14,10 +14,11 @@ namespace PhpCsFixer\Fixer\Phpdoc;
 
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\DocBlock\DocBlock;
-use PhpCsFixer\DocBlock\Line;
+use PhpCsFixer\DocBlock\ShortDescription;
 use PhpCsFixer\Fixer\WhitespacesAwareFixerInterface;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -31,14 +32,25 @@ final class PhpdocSummaryFixer extends AbstractFixer implements WhitespacesAware
     public function getDefinition()
     {
         return new FixerDefinition(
-            'Phpdocs summary should end in either a full stop, exclamation mark, or question mark.',
-            array(new CodeSample('<?php
+            'PHPDoc summary should end in either a full stop, exclamation mark, or question mark.',
+            [new CodeSample('<?php
 /**
  * Foo function is great
  */
 function foo () {}
-'))
+')]
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Must run before PhpdocAlignFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
+     */
+    public function getPriority()
+    {
+        return 0;
     }
 
     /**
@@ -54,13 +66,13 @@ function foo () {}
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
-        foreach ($tokens as $token) {
+        foreach ($tokens as $index => $token) {
             if (!$token->isGivenKind(T_DOC_COMMENT)) {
                 continue;
             }
 
             $doc = new DocBlock($token->getContent());
-            $end = $this->findShortDescriptionEnd($doc->getLines());
+            $end = (new ShortDescription($doc))->getEnd();
 
             if (null !== $end) {
                 $line = $doc->getLine($end);
@@ -68,40 +80,8 @@ function foo () {}
 
                 if (!$this->isCorrectlyFormatted($content)) {
                     $line->setContent($content.'.'.$this->whitespacesConfig->getLineEnding());
-                    $token->setContent($doc->getContent());
+                    $tokens[$index] = new Token([T_DOC_COMMENT, $doc->getContent()]);
                 }
-            }
-        }
-    }
-
-    /**
-     * Find the line number of the line containing the end of the short
-     * description, if present.
-     *
-     * @param Line[] $lines
-     *
-     * @return int|null
-     */
-    private function findShortDescriptionEnd(array $lines)
-    {
-        $reachedContent = false;
-
-        foreach ($lines as $index => $line) {
-            // we went past a description, then hit a tag or blank line, so
-            // the last line of the description must be the one before this one
-            if ($reachedContent && ($line->containsATag() || !$line->containsUsefulContent())) {
-                return $index - 1;
-            }
-
-            // no short description was found
-            if ($line->containsATag()) {
-                return null;
-            }
-
-            // we've reached content, but need to check the next lines too
-            // in case the short description is multi-line
-            if ($line->containsUsefulContent()) {
-                $reachedContent = true;
             }
         }
     }
@@ -115,7 +95,7 @@ function foo () {}
      */
     private function isCorrectlyFormatted($content)
     {
-        if (false !== strpos(strtolower($content), '{@inheritdoc}')) {
+        if (false !== stripos($content, '{@inheritdoc}')) {
             return true;
         }
 

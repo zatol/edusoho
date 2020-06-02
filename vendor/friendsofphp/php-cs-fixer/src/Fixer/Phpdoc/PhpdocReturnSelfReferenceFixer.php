@@ -19,6 +19,7 @@ use PhpCsFixer\FixerConfiguration\FixerConfigurationResolverRootless;
 use PhpCsFixer\FixerConfiguration\FixerOptionBuilder;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 use PhpCsFixer\Tokenizer\TokensAnalyzer;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
@@ -29,11 +30,11 @@ use Symfony\Component\OptionsResolver\Options;
  */
 final class PhpdocReturnSelfReferenceFixer extends AbstractFixer implements ConfigurationDefinitionFixerInterface
 {
-    private static $toTypes = array(
+    private static $toTypes = [
         '$this',
         'static',
         'self',
-    );
+    ];
 
     /**
      * {@inheritdoc}
@@ -42,19 +43,53 @@ final class PhpdocReturnSelfReferenceFixer extends AbstractFixer implements Conf
     {
         return new FixerDefinition(
             'The type of `@return` annotations of methods returning a reference to itself must the configured one.',
-            array(new CodeSample('
-<?php
+            [
+                new CodeSample(
+                    '<?php
 class Sample
 {
     /**
      * @return this
      */
-    public function test()
+    public function test1()
     {
         return $this;
     }
-}'
-            ))
+
+    /**
+     * @return $self
+     */
+    public function test2()
+    {
+        return $this;
+    }
+}
+'
+                ),
+                new CodeSample(
+                    '<?php
+class Sample
+{
+    /**
+     * @return this
+     */
+    public function test1()
+    {
+        return $this;
+    }
+
+    /**
+     * @return $self
+     */
+    public function test2()
+    {
+        return $this;
+    }
+}
+',
+                    ['replacements' => ['this' => 'self']]
+                ),
+            ]
         );
     }
 
@@ -63,7 +98,18 @@ class Sample
      */
     public function isCandidate(Tokens $tokens)
     {
-        return count($tokens) > 10 && $tokens->isTokenKindFound(T_DOC_COMMENT) && $tokens->isAnyTokenKindsFound(array(T_CLASS, T_INTERFACE));
+        return \count($tokens) > 10 && $tokens->isTokenKindFound(T_DOC_COMMENT) && $tokens->isAnyTokenKindsFound([T_CLASS, T_INTERFACE]);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Must run before NoSuperfluousPhpdocTagsFixer, PhpdocAlignFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
+     */
+    public function getPriority()
+    {
+        return 10;
     }
 
     /**
@@ -84,61 +130,57 @@ class Sample
      */
     protected function createConfigurationDefinition()
     {
-        $toTypes = self::$toTypes;
-        $default = array(
+        $default = [
             'this' => '$this',
             '@this' => '$this',
             '$self' => 'self',
             '@self' => 'self',
             '$static' => 'static',
             '@static' => 'static',
-        );
+        ];
 
-        $replacements = new FixerOptionBuilder('replacements', 'Mapping between replaced return types with new ones.');
-        $replacements = $replacements
-            ->setAllowedTypes(array('array'))
-            ->setNormalizer(function (Options $options, $value) use ($toTypes, $default) {
-                $normalizedValue = array();
-                foreach ($value as $from => $to) {
-                    if (is_string($from)) {
-                        $from = strtolower($from);
+        return new FixerConfigurationResolverRootless('replacements', [
+            (new FixerOptionBuilder('replacements', 'Mapping between replaced return types with new ones.'))
+                ->setAllowedTypes(['array'])
+                ->setNormalizer(static function (Options $options, $value) use ($default) {
+                    $normalizedValue = [];
+                    foreach ($value as $from => $to) {
+                        if (\is_string($from)) {
+                            $from = strtolower($from);
+                        }
+
+                        if (!isset($default[$from])) {
+                            throw new InvalidOptionsException(sprintf(
+                                'Unknown key "%s", expected any of "%s".',
+                                \is_object($from) ? \get_class($from) : \gettype($from).(\is_resource($from) ? '' : '#'.$from),
+                                implode('", "', array_keys($default))
+                            ));
+                        }
+
+                        if (!\in_array($to, self::$toTypes, true)) {
+                            throw new InvalidOptionsException(sprintf(
+                                'Unknown value "%s", expected any of "%s".',
+                                \is_object($to) ? \get_class($to) : \gettype($to).(\is_resource($to) ? '' : '#'.$to),
+                                implode('", "', self::$toTypes)
+                            ));
+                        }
+
+                        $normalizedValue[$from] = $to;
                     }
 
-                    if (!isset($default[$from])) {
-                        throw new InvalidOptionsException(sprintf(
-                            'Unknown key "%s", expected any of "%s".',
-                            is_object($from) ? get_class($from) : gettype($from).(is_resource($from) ? '' : '#'.$from),
-                            implode('", "', array_keys($default))
-                        ));
-                    }
-
-                    if (!in_array($to, $toTypes, true)) {
-                        throw new InvalidOptionsException(sprintf(
-                            'Unknown value "%s", expected any of "%s".',
-                            is_object($to) ? get_class($to) : gettype($to).(is_resource($to) ? '' : '#'.$to),
-                            implode('", "', $toTypes)
-                        ));
-                    }
-
-                    $normalizedValue[$from] = $to;
-                }
-
-                return $normalizedValue;
-            })
-            ->setDefault($default)
-            ->getOption()
-        ;
-
-        return new FixerConfigurationResolverRootless('replacements', array($replacements));
+                    return $normalizedValue;
+                })
+                ->setDefault($default)
+                ->getOption(),
+        ], $this->getName());
     }
 
     /**
-     * @param Tokens $tokens
-     * @param int    $index
+     * @param int $index
      */
     private function fixMethod(Tokens $tokens, $index)
     {
-        static $methodModifiers = array(T_STATIC, T_FINAL, T_ABSTRACT, T_PRIVATE, T_PROTECTED, T_PUBLIC);
+        static $methodModifiers = [T_STATIC, T_FINAL, T_ABSTRACT, T_PRIVATE, T_PROTECTED, T_PUBLIC];
 
         // find PHPDoc of method (if any)
         do {
@@ -159,18 +201,18 @@ class Sample
         $docBlock = new DocBlock($tokens[$docIndex]->getContent());
         $returnsBlock = $docBlock->getAnnotationsOfType('return');
 
-        if (!count($returnsBlock)) {
+        if (!\count($returnsBlock)) {
             return; // no return annotation found
         }
 
         $returnsBlock = $returnsBlock[0];
         $types = $returnsBlock->getTypes();
 
-        if (!count($types)) {
+        if (!\count($types)) {
             return; // no return type(s) found
         }
 
-        $newTypes = array();
+        $newTypes = [];
         foreach ($types as $type) {
             $lower = strtolower($type);
             $newTypes[] = isset($this->configuration['replacements'][$lower]) ? $this->configuration['replacements'][$lower] : $type;
@@ -181,6 +223,6 @@ class Sample
         }
 
         $returnsBlock->setTypes($newTypes);
-        $tokens[$docIndex]->setContent($docBlock->getContent());
+        $tokens[$docIndex] = new Token([T_DOC_COMMENT, $docBlock->getContent()]);
     }
 }

@@ -562,6 +562,8 @@ class TaskServiceImpl extends BaseService implements TaskService
         $taskResult = $this->getTaskResultService()->createTaskResult($taskResult);
 
         $this->dispatchEvent('course.task.start', new Event($taskResult));
+
+        return $taskResult;
     }
 
     public function doTask($taskId, $time = TaskService::LEARN_TIME_STEP)
@@ -970,7 +972,7 @@ class TaskServiceImpl extends BaseService implements TaskService
         $tasks = $this->getTaskDao()->search($taskConditions, array('seq' => 'ASC'), 0, PHP_INT_MAX);
         if (empty($taskResult)) {
             $toLearnTasks = $this->getTaskDao()->search(
-                array('courseId' => $courseId, 'status' => 'published'),
+                array('courseId' => $courseId, 'status' => 'published', 'isOptional' => 0),
                 array('seq' => 'ASC'),
                 0,
                 $toLearnTaskCount

@@ -19,6 +19,7 @@ use PhpCsFixer\FixerConfiguration\FixerConfigurationResolverRootless;
 use PhpCsFixer\FixerConfiguration\FixerOptionBuilder;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -33,28 +34,30 @@ final class GeneralPhpdocAnnotationRemoveFixer extends AbstractFixer implements 
     public function getDefinition()
     {
         return new FixerDefinition(
-            'Configured annotations should be omitted from phpdocs.',
-            array(
+            'Configured annotations should be omitted from PHPDoc.',
+            [
                 new CodeSample(
                     '<?php
 /**
  * @internal
  * @author someone
  */
-function foo() {}',
-                    array('annotations' => array('author'))
+function foo() {}
+',
+                    ['annotations' => ['author']]
                 ),
-            )
+            ]
         );
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before NoEmptyPhpdocFixer, PhpdocAlignFixer, PhpdocLineSpanFixer, PhpdocSeparationFixer, PhpdocTrimFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
      */
     public function getPriority()
     {
-        // must be run before the PhpdocSeparationFixer, PhpdocOrderFixer,
-        // PhpdocTrimFixer and PhpdocNoEmptyReturnFixer.
         return 10;
     }
 
@@ -71,11 +74,11 @@ function foo() {}',
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
-        if (!count($this->configuration['annotations'])) {
+        if (!\count($this->configuration['annotations'])) {
             return;
         }
 
-        foreach ($tokens as $token) {
+        foreach ($tokens as $index => $token) {
             if (!$token->isGivenKind(T_DOC_COMMENT)) {
                 continue;
             }
@@ -92,7 +95,11 @@ function foo() {}',
                 $annotation->remove();
             }
 
-            $token->setContent($doc->getContent());
+            if ('' === $doc->getContent()) {
+                $tokens->clearTokenAndMergeSurroundingWhitespace($index);
+            } else {
+                $tokens[$index] = new Token([T_DOC_COMMENT, $doc->getContent()]);
+            }
         }
     }
 
@@ -101,13 +108,11 @@ function foo() {}',
      */
     protected function createConfigurationDefinition()
     {
-        $annotations = new FixerOptionBuilder('annotations', 'List of annotations to remove, e.g. `["@author"]`.');
-        $annotations = $annotations
-            ->setAllowedTypes(array('array'))
-            ->setDefault(array())
-            ->getOption()
-        ;
-
-        return new FixerConfigurationResolverRootless('annotations', array($annotations));
+        return new FixerConfigurationResolverRootless('annotations', [
+            (new FixerOptionBuilder('annotations', 'List of annotations to remove, e.g. `["author"]`.'))
+                ->setAllowedTypes(['array'])
+                ->setDefault([])
+                ->getOption(),
+        ], $this->getName());
     }
 }

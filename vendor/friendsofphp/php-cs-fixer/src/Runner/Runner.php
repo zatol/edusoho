@@ -19,14 +19,15 @@ use PhpCsFixer\Cache\DirectoryInterface;
 use PhpCsFixer\Differ\DifferInterface;
 use PhpCsFixer\Error\Error;
 use PhpCsFixer\Error\ErrorsManager;
+use PhpCsFixer\Event\Event;
+use PhpCsFixer\FileReader;
 use PhpCsFixer\Fixer\FixerInterface;
 use PhpCsFixer\FixerFileProcessedEvent;
 use PhpCsFixer\Linter\LinterInterface;
 use PhpCsFixer\Linter\LintingException;
 use PhpCsFixer\Linter\LintingResultInterface;
 use PhpCsFixer\Tokenizer\Tokens;
-use Symfony\Component\EventDispatcher\Event;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Filesystem\Exception\IOException;
 
 /**
@@ -45,7 +46,7 @@ final class Runner
     private $directory;
 
     /**
-     * @var EventDispatcher|null
+     * @var null|EventDispatcherInterface
      */
     private $eventDispatcher;
 
@@ -88,7 +89,7 @@ final class Runner
         $finder,
         array $fixers,
         DifferInterface $differ,
-        EventDispatcher $eventDispatcher = null,
+        EventDispatcherInterface $eventDispatcher = null,
         ErrorsManager $errorsManager,
         LinterInterface $linter,
         $isDryRun,
@@ -113,7 +114,7 @@ final class Runner
      */
     public function fix()
     {
-        $changed = array();
+        $changed = [];
 
         $finder = $this->finder;
         $finderIterator = $finder instanceof \IteratorAggregate ? $finder->getIterator() : $finder;
@@ -163,14 +164,17 @@ final class Runner
             return;
         }
 
-        $old = file_get_contents($file->getRealPath());
+        $old = FileReader::createSingleton()->read($file->getRealPath());
+
+        Tokens::setLegacyMode(false);
+
         $tokens = Tokens::fromCode($old);
         $oldHash = $tokens->getCodeHash();
 
         $newHash = $oldHash;
         $new = $old;
 
-        $appliedFixers = array();
+        $appliedFixers = [];
 
         try {
             foreach ($this->fixers as $fixer) {
@@ -222,6 +226,11 @@ final class Runner
         // work of other and both of them will mark collection as changed.
         // Therefore we need to check if code hashes changed.
         if ($oldHash !== $newHash) {
+            $fixInfo = [
+                'appliedFixers' => $appliedFixers,
+                'diff' => $this->differ->diff($old, $new),
+            ];
+
             try {
                 $this->linter->lintSource($new)->check();
             } catch (LintingException $e) {
@@ -230,7 +239,7 @@ final class Runner
                     new FixerFileProcessedEvent(FixerFileProcessedEvent::STATUS_LINT)
                 );
 
-                $this->errorsManager->report(new Error(Error::TYPE_LINT, $name, $e));
+                $this->errorsManager->report(new Error(Error::TYPE_LINT, $name, $e, $fixInfo['appliedFixers'], $fixInfo['diff']));
 
                 return;
             }
@@ -247,11 +256,6 @@ final class Runner
                     );
                 }
             }
-
-            $fixInfo = array(
-                'appliedFixers' => $appliedFixers,
-                'diff' => $this->differ->diff($old, $new),
-            );
         }
 
         $this->cacheManager->setFile($name, $new);
@@ -281,10 +285,7 @@ final class Runner
     }
 
     /**
-     * Dispatch event.
-     *
      * @param string $name
-     * @param Event  $event
      */
     private function dispatchEvent($name, Event $event)
     {
@@ -292,6 +293,15 @@ final class Runner
             return;
         }
 
-        $this->eventDispatcher->dispatch($name, $event);
+        // BC compatibility < Sf 4.3
+        if (
+            !$this->eventDispatcher instanceof \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+        ) {
+            $this->eventDispatcher->dispatch($name, $event);
+
+            return;
+        }
+
+        $this->eventDispatcher->dispatch($event, $name);
     }
 }

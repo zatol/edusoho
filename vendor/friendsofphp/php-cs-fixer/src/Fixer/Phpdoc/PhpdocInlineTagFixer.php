@@ -15,6 +15,8 @@ namespace PhpCsFixer\Fixer\Phpdoc;
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Preg;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -28,9 +30,9 @@ final class PhpdocInlineTagFixer extends AbstractFixer
     public function getDefinition()
     {
         return new FixerDefinition(
-            'Fix phpdoc inline tags, make inheritdoc always inline.',
-            array(new CodeSample(
-'<?php
+            'Fix PHPDoc inline tags, make `@inheritdoc` always inline.',
+            [new CodeSample(
+                '<?php
 /**
  * @{TUTORIAL}
  * {{ @link }}
@@ -38,8 +40,19 @@ final class PhpdocInlineTagFixer extends AbstractFixer
  * @inheritdocs
  */
 '
-            ))
+            )]
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Must run before PhpdocAlignFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
+     */
+    public function getPriority()
+    {
+        return 0;
     }
 
     /**
@@ -55,7 +68,7 @@ final class PhpdocInlineTagFixer extends AbstractFixer
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
-        foreach ($tokens as $token) {
+        foreach ($tokens as $index => $token) {
             if (!$token->isGivenKind(T_DOC_COMMENT)) {
                 continue;
             }
@@ -66,9 +79,9 @@ final class PhpdocInlineTagFixer extends AbstractFixer
             // remove spaces between '{' and '@', remove 's' at the end of tag.
             // Make sure the tags are written in lower case, remove white space between end
             // of text and closing bracket and between the tag and inline comment.
-            $content = preg_replace_callback(
-                '#(?:@{+|{+[ \t]*@)[ \t]*(example|id|internal|inheritdoc|link|source|toc|tutorial)s?([^}]*)(?:}+)#i',
-                function (array $matches) {
+            $content = Preg::replaceCallback(
+                '#(?:@{+|{+\h*@)[ \t]*(example|id|internal|inheritdoc|link|source|toc|tutorial)s?([^}]*)(?:}+)#i',
+                static function (array $matches) {
                     $doc = trim($matches[2]);
 
                     if ('' === $doc) {
@@ -82,13 +95,13 @@ final class PhpdocInlineTagFixer extends AbstractFixer
 
             // Always make inheritdoc inline using with '{' '}' when needed,
             // make sure lowercase.
-            $content = preg_replace(
+            $content = Preg::replace(
                 '#(?<!{)@inheritdocs?(?!})#i',
                 '{@inheritdoc}',
                 $content
             );
 
-            $token->setContent($content);
+            $tokens[$index] = new Token([T_DOC_COMMENT, $content]);
         }
     }
 }

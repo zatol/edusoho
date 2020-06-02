@@ -15,6 +15,7 @@ namespace PhpCsFixer\Fixer\ControlStructure;
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -31,9 +32,9 @@ final class SwitchCaseSemicolonToColonFixer extends AbstractFixer
     {
         return new FixerDefinition(
             'A case should be followed by a colon and not a semicolon.',
-            array(
+            [
                 new CodeSample(
-'<?php
+                    '<?php
     switch ($a) {
         case 1;
             break;
@@ -42,8 +43,18 @@ final class SwitchCaseSemicolonToColonFixer extends AbstractFixer
     }
 '
                 ),
-            )
+            ]
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Must run after NoEmptyStatementFixer.
+     */
+    public function getPriority()
+    {
+        return 0;
     }
 
     /**
@@ -51,7 +62,7 @@ final class SwitchCaseSemicolonToColonFixer extends AbstractFixer
      */
     public function isCandidate(Tokens $tokens)
     {
-        return $tokens->isAnyTokenKindsFound(array(T_CASE, T_DEFAULT));
+        return $tokens->isAnyTokenKindsFound([T_CASE, T_DEFAULT]);
     }
 
     /**
@@ -60,29 +71,43 @@ final class SwitchCaseSemicolonToColonFixer extends AbstractFixer
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
         foreach ($tokens as $index => $token) {
-            if (!$token->isGivenKind(array(T_CASE, T_DEFAULT))) {
+            if ($token->isGivenKind([T_CASE, T_DEFAULT])) {
+                $this->fixSwitchCase($tokens, $index);
+            }
+        }
+    }
+
+    /**
+     * @param int $index
+     */
+    protected function fixSwitchCase(Tokens $tokens, $index)
+    {
+        $ternariesCount = 0;
+        do {
+            if ($tokens[$index]->equalsAny(['(', '{'])) { // skip constructs
+                $type = Tokens::detectBlockType($tokens[$index]);
+                $index = $tokens->findBlockEnd($type['type'], $index);
+
                 continue;
             }
 
-            $ternariesCount = 0;
-            for ($colonIndex = $index + 1; ; ++$colonIndex) {
-                // We have to skip ternary case for colons.
-                if ($tokens[$colonIndex]->equals('?')) {
-                    ++$ternariesCount;
-                }
+            if ($tokens[$index]->equals('?')) {
+                ++$ternariesCount;
 
-                if ($tokens[$colonIndex]->equalsAny(array(':', ';'))) {
-                    if (0 === $ternariesCount) {
-                        break;
-                    }
-
-                    --$ternariesCount;
-                }
+                continue;
             }
 
-            if ($tokens[$colonIndex]->equals(';')) {
-                $tokens->overrideAt($colonIndex, ':');
+            if ($tokens[$index]->equalsAny([':', ';'])) {
+                if (0 === $ternariesCount) {
+                    break;
+                }
+
+                --$ternariesCount;
             }
+        } while (++$index);
+
+        if ($tokens[$index]->equals(';')) {
+            $tokens[$index] = new Token(':');
         }
     }
 }

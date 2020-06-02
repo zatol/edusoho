@@ -31,7 +31,7 @@ final class WhitespaceAfterCommaInArrayFixer extends AbstractFixer
     {
         return new FixerDefinition(
             'In array declaration, there MUST be a whitespace after each comma.',
-            array(new CodeSample("<?php\n\$sample = array(1,'a',\$b,);"))
+            [new CodeSample("<?php\n\$sample = array(1,'a',\$b,);\n")]
         );
     }
 
@@ -40,7 +40,7 @@ final class WhitespaceAfterCommaInArrayFixer extends AbstractFixer
      */
     public function isCandidate(Tokens $tokens)
     {
-        return $tokens->isAnyTokenKindsFound(array(T_ARRAY, CT::T_ARRAY_SQUARE_BRACE_OPEN));
+        return $tokens->isAnyTokenKindsFound([T_ARRAY, CT::T_ARRAY_SQUARE_BRACE_OPEN]);
     }
 
     /**
@@ -49,7 +49,7 @@ final class WhitespaceAfterCommaInArrayFixer extends AbstractFixer
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
         for ($index = $tokens->count() - 1; $index >= 0; --$index) {
-            if ($tokens[$index]->isGivenKind(array(T_ARRAY, CT::T_ARRAY_SQUARE_BRACE_OPEN))) {
+            if ($tokens[$index]->isGivenKind([T_ARRAY, CT::T_ARRAY_SQUARE_BRACE_OPEN])) {
                 $this->fixSpacing($index, $tokens);
             }
         }
@@ -58,8 +58,7 @@ final class WhitespaceAfterCommaInArrayFixer extends AbstractFixer
     /**
      * Method to fix spacing in array declaration.
      *
-     * @param int    $index
-     * @param Tokens $tokens
+     * @param int $index
      */
     private function fixSpacing($index, Tokens $tokens)
     {
@@ -67,14 +66,14 @@ final class WhitespaceAfterCommaInArrayFixer extends AbstractFixer
             $startIndex = $index;
             $endIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_ARRAY_SQUARE_BRACE, $startIndex);
         } else {
-            $startIndex = $tokens->getNextTokenOfKind($index, array('('));
+            $startIndex = $tokens->getNextTokenOfKind($index, ['(']);
             $endIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $startIndex);
         }
 
         for ($i = $endIndex - 1; $i > $startIndex; --$i) {
             $i = $this->skipNonArrayElements($i, $tokens);
             if ($tokens[$i]->equals(',') && !$tokens[$i + 1]->isWhitespace()) {
-                $tokens->insertAt($i + 1, new Token(array(T_WHITESPACE, ' ')));
+                $tokens->insertAt($i + 1, new Token([T_WHITESPACE, ' ']));
             }
         }
     }
@@ -82,21 +81,20 @@ final class WhitespaceAfterCommaInArrayFixer extends AbstractFixer
     /**
      * Method to move index over the non-array elements like function calls or function declarations.
      *
-     * @param int    $index
-     * @param Tokens $tokens
+     * @param int $index
      *
      * @return int New index
      */
     private function skipNonArrayElements($index, Tokens $tokens)
     {
         if ($tokens[$index]->equals('}')) {
-            return $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $index, false);
+            return $tokens->findBlockStart(Tokens::BLOCK_TYPE_CURLY_BRACE, $index);
         }
 
         if ($tokens[$index]->equals(')')) {
-            $startIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $index, false);
+            $startIndex = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $index);
             $startIndex = $tokens->getPrevMeaningfulToken($startIndex);
-            if (!$tokens[$startIndex]->isGivenKind(array(T_ARRAY, CT::T_ARRAY_SQUARE_BRACE_OPEN))) {
+            if (!$tokens[$startIndex]->isGivenKind([T_ARRAY, CT::T_ARRAY_SQUARE_BRACE_OPEN])) {
                 return $startIndex;
             }
         }

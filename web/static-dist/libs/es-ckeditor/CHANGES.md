@@ -1,3 +1,12 @@
+# es-ckeditor 4.7.2-patch13 (2020-05-12)
+
+* 解决公式编辑器跨域问题
+* 适配item-bank中调用 es-ckeditor 公式编辑器
+
+# es-ckeditor 4.7.2-patch12 (2019-05-23)
+
+* 4.7.2-patch12版本号占用，不可用
+
 # es-ckeditor 4.7.2-patch11 (2019-02-21)
 
 * 修复图片粘贴或者拖拽时变形的问题

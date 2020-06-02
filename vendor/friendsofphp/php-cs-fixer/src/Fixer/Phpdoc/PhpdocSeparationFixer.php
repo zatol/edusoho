@@ -16,15 +16,15 @@ use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\DocBlock\Annotation;
 use PhpCsFixer\DocBlock\DocBlock;
 use PhpCsFixer\DocBlock\TagComparator;
-use PhpCsFixer\Fixer\WhitespacesAwareFixerInterface;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
  * @author Graham Campbell <graham@alt-three.com>
  */
-final class PhpdocSeparationFixer extends AbstractFixer implements WhitespacesAwareFixerInterface
+final class PhpdocSeparationFixer extends AbstractFixer
 {
     /**
      * {@inheritdoc}
@@ -32,8 +32,8 @@ final class PhpdocSeparationFixer extends AbstractFixer implements WhitespacesAw
     public function getDefinition()
     {
         return new FixerDefinition(
-            'Annotations in phpdocs should be grouped together so that annotations of the same type immediately follow each other, and annotations of a different type are separated by a single blank line.',
-            array(
+            'Annotations in PHPDoc should be grouped together so that annotations of the same type immediately follow each other, and annotations of a different type are separated by a single blank line.',
+            [
                 new CodeSample(
                     '<?php
 /**
@@ -45,14 +45,18 @@ final class PhpdocSeparationFixer extends AbstractFixer implements WhitespacesAw
  * @throws Exception|RuntimeException
  * @return bool
  */
-function fnc($foo, $bar) {}'
+function fnc($foo, $bar) {}
+'
                 ),
-            )
+            ]
         );
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before PhpdocAlignFixer.
+     * Must run after CommentToPhpdocFixer, GeneralPhpdocAnnotationRemoveFixer, PhpdocIndentFixer, PhpdocNoAccessFixer, PhpdocNoEmptyReturnFixer, PhpdocNoPackageFixer, PhpdocOrderFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
      */
     public function getPriority()
     {
@@ -72,7 +76,7 @@ function fnc($foo, $bar) {}'
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
-        foreach ($tokens as $token) {
+        foreach ($tokens as $index => $token) {
             if (!$token->isGivenKind(T_DOC_COMMENT)) {
                 continue;
             }
@@ -81,14 +85,12 @@ function fnc($foo, $bar) {}'
             $this->fixDescription($doc);
             $this->fixAnnotations($doc);
 
-            $token->setContent($doc->getContent());
+            $tokens[$index] = new Token([T_DOC_COMMENT, $doc->getContent()]);
         }
     }
 
     /**
      * Make sure the description is separated from the annotations.
-     *
-     * @param DocBlock $doc
      */
     private function fixDescription(DocBlock $doc)
     {
@@ -100,8 +102,9 @@ function fnc($foo, $bar) {}'
             if ($line->containsUsefulContent()) {
                 $next = $doc->getLine($index + 1);
 
-                if ($next->containsATag()) {
+                if (null !== $next && $next->containsATag()) {
                     $line->addBlank();
+
                     break;
                 }
             }
@@ -110,8 +113,6 @@ function fnc($foo, $bar) {}'
 
     /**
      * Make sure the annotations are correctly separated.
-     *
-     * @param DocBlock $doc
      *
      * @return string
      */
@@ -138,10 +139,6 @@ function fnc($foo, $bar) {}'
 
     /**
      * Force the given annotations to immediately follow each other.
-     *
-     * @param DocBlock   $doc
-     * @param Annotation $first
-     * @param Annotation $second
      */
     private function ensureAreTogether(DocBlock $doc, Annotation $first, Annotation $second)
     {
@@ -155,10 +152,6 @@ function fnc($foo, $bar) {}'
 
     /**
      * Force the given annotations to have one empty line between each other.
-     *
-     * @param DocBlock   $doc
-     * @param Annotation $first
-     * @param Annotation $second
      */
     private function ensureAreSeparate(DocBlock $doc, Annotation $first, Annotation $second)
     {

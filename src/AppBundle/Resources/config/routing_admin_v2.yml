@@ -118,6 +118,15 @@ admin_v2_course_set_detail_data:
     path:  /course_set/detail/data/{id}
     defaults: { _controller: AppBundle:AdminV2/Teach/CourseSet:detailData }
 
+admin_v2_course_set_detail_data_export_prepare:
+    path: /course_set/detail/data/{courseId}/export/prepare
+    defaults: { _controller: AppBundle:AdminV2/Teach/CourseSet:prepareForExportCourseDetailData }
+    permissions: [admin_v2_course_set_data]
+
+admin_v2_course_set_detail_data_export:
+    path: /course_set/detail/data/{courseId}/export
+    defaults: { _controller: AppBundle:AdminV2/Teach/CourseSet:exportCourseDetailData}
+
 admin_v2_courses_data:
     path:  /courses/data/{courseSetId}
     defaults: { _controller: AppBundle:AdminV2/Teach/Course:coursesData }
@@ -1227,6 +1236,11 @@ admin_v2_user_create_nickname_check:
     defaults: { _controller: AppBundle:AdminV2/User/UserManage:nicknameCheck }
     permissions: [admin_v2_user_manage]
 
+admin_v2_user_update_nickname_check:
+    path:  /user/update/{userId}/nickname/check
+    defaults: { _controller: AppBundle:AdminV2/User/UserManage:updateNicknameCheck }
+    permissions: [admin_v2_user_manage]
+
 admin_v2_user_show:
     path:  /user/{id}
     defaults: { _controller: AppBundle:AdminV2/User/UserManage:show }
@@ -1262,6 +1276,10 @@ admin_v2_user_avatar_crop:
     path:  /user/{id}/avatar/crop
     defaults: { _controller: AppBundle:AdminV2/User/UserManage:avatarCrop }
     permissions: [admin_v2_user_avatar]
+
+admin_v2_user_change_nickname:
+    path:  /user/{userId}/change/nickname
+    defaults: { _controller: AppBundle:AdminV2/User/UserManage:changeNickname }
 
 admin_v2_user_change_password:
     path:  /user/{userId}/change/password
@@ -1953,6 +1971,28 @@ admin_cloud_doc:
     defaults: { _controller: AppBundle:AdminV2/CloudCenter/Cloud:doc }
     permissions: [admin_v2_my_cloud_overview]
 
+# 应用中心-内容云-内容结算-余额明细
+admin_v2_resource_settlement_balance:
+    path:  /app/resources_settlement/balance
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourceSettlement:balance }
+
+admin_v2_resource_settlement_balance_modal:
+  path:  /app/resources_settlement/balance/{id}
+  defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourceSettlement:balanceModal }
+
+admin_v2_resource_settlement_order_modal:
+    path:  /app/resources_settlement/order/{sn}
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourceSettlement:orderModal }
+
+# 应用中心-内容云-内容结算-采购单管理
+admin_v2_resource_settlement_order:
+    path:  /app/resources_settlement/order
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourceSettlement:order }
+
+# 应用中心-内容云-内容结算-已选商品
+admin_v2_resource_settlement_product:
+    path:  /app/resources_settlement/product
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourceSettlement:product }
 # 应用中心-营销云-营销应用
 admin_v2_app_center:
     path:  /app/center/{postStatus}
@@ -2172,6 +2212,33 @@ admin_v2_cloud_face_identify_setting:
     path: /edu_cloud/face_identify/setting
     defaults: { _controller: AppBundle:AdminV2/CloudCenter/FeatureLab:faceIdentify }
     permissions: [admin_v2_cloud_face_identify]
+
+#应用中心－基础云－云监考
+admin_v2_edu_cloud_facein_overview:
+    path:  /edu_cloud/facein/user_face
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/FaceInspection:overview }
+    permissions: [admin_v2_cloud_facein]
+
+admin_v2_edu_cloud_facein_useface_detail:
+    path:  /edu_cloud/facein/user_face/{userId}/detail
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/FaceInspection:userFaceDetail }
+    permissions: [admin_v2_cloud_facein]
+
+admin_v2_edu_cloud_facein_setting:
+    path:  /edu_cloud/facein/setting
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/FaceInspection:setting }
+    permissions: [admin_v2_cloud_facein]
+
+admin_v2_edu_cloud_facein_update:
+    path:  /edu_cloud/facein/update
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/FaceInspection:update }
+    permissions: [admin_v2_cloud_facein]
+    methods:  [POST]
+
+admin_v2_edu_cloud_facein_generate_link:
+    path:  /edu_cloud/facein/generate/link
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/FaceInspection:generateLink }
+    permissions: [admin_v2_cloud_facein]
 
 #应用中心－基础云－功能实验室
 admin_v2_cloud_feature_lab_setting:
@@ -2430,3 +2497,45 @@ admin_v2_setting_mobile_iap_product_delete:
     path:  /setting/mobile_iap_product_delete/{productId}
     defaults: { _controller: AppBundle:AdminV2/Developer/IAP:mobileIapProductDelete }
     methods: [POST]
+
+admin_v2_purchase_market:
+    path: /app/content_resource/purchase_market/resource_type/{tab}
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourcePurchase:market, tab: 'courseSet' }
+
+admin_v2_purchase_market_products_list:
+    path: /app/content_resource/purchase_market/{type}/goods_list
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourcePurchase:products, type: 'courseSet'}
+
+admin_v2_content_resource_products_version:
+    path:  /app/content_resource/products/version
+    defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourcePurchase:productsVersion }
+
+admin_v2_content_resource_product_version_detail:
+  path:  /app/content_resource/product/{productId}/version_detail
+  defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourcePurchase:productVersionDetail }
+
+admin_v2_content_resource_update_product_version:
+  path:  /app/resources/product/{productId}/update/version
+  defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourcePurchase:updateProductToLatestVersion }
+
+admin_v2_content_resource_product_detail:
+  path:  /app/resourses/type/{productType}/remote_resource/{remoteResourceId}
+  defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourcePurchase:productDetail }
+
+admin_v2_content_resource_choose_product:
+  path:  /app/content_resource/type/{productType}/product_id/{productId}
+  defaults: { _controller: AppBundle:AdminV2/CloudCenter/S2B2C/Product:pullSupplierProduct }
+  methods: [POST]
+
+admin_v2_product_update_setting:
+  path:  /app/resource_product/product/update/setting
+  defaults: { _controller: AppBundle:AdminV2/CloudCenter/ResourcePurchase:productUpdateSetting }
+
+# Plumber队列（隐藏路由）
+admin_v2_plumber:
+  path: /plumber
+  defaults: { _controller: AppBundle:AdminV2/Developer/Plumber:index }
+
+admin_v2_plumber_queue:
+  path: /plumber/queue
+  defaults: { _controller: AppBundle:AdminV2/Developer/Plumber:queue }

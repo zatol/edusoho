@@ -12,6 +12,8 @@
 
 namespace PhpCsFixer\DocBlock;
 
+use PhpCsFixer\Preg;
+
 /**
  * This represents a tag, as defined by the proposed PSR PHPDoc standard.
  *
@@ -24,12 +26,12 @@ class Tag
      *
      * @var string[]
      */
-    private static $tags = array(
+    private static $tags = [
         'api', 'author', 'category', 'copyright', 'deprecated', 'example',
         'global', 'internal', 'license', 'link', 'method', 'package', 'param',
         'property', 'property-read', 'property-write', 'return', 'see',
         'since', 'subpackage', 'throws', 'todo', 'uses', 'var', 'version',
-    );
+    ];
 
     /**
      * The line containing the tag.
@@ -47,8 +49,6 @@ class Tag
 
     /**
      * Create a new tag instance.
-     *
-     * @param Line $line
      */
     public function __construct(Line $line)
     {
@@ -65,7 +65,7 @@ class Tag
     public function getName()
     {
         if (null === $this->name) {
-            preg_match_all('/@[a-zA-Z0-9_-]+(?=\s|$)/', $this->line->getContent(), $matches);
+            Preg::matchAll('/@[a-zA-Z0-9_-]+(?=\s|$)/', $this->line->getContent(), $matches);
 
             if (isset($matches[0][0])) {
                 $this->name = ltrim($matches[0][0], '@');
@@ -80,7 +80,7 @@ class Tag
     /**
      * Set the tag name.
      *
-     * This will also be persisted to the upsteam line and annotation.
+     * This will also be persisted to the upstream line and annotation.
      *
      * @param string $name
      */
@@ -92,7 +92,7 @@ class Tag
             throw new \RuntimeException('Cannot set name on unknown tag.');
         }
 
-        $this->line->setContent(preg_replace("/@$current/", "@$name", $this->line->getContent(), 1));
+        $this->line->setContent(Preg::replace("/@{$current}/", "@{$name}", $this->line->getContent(), 1));
 
         $this->name = $name;
     }
@@ -106,6 +106,6 @@ class Tag
      */
     public function valid()
     {
-        return in_array($this->getName(), self::$tags, true);
+        return \in_array($this->getName(), self::$tags, true);
     }
 }

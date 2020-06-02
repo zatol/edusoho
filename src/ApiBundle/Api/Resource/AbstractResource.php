@@ -50,6 +50,9 @@ abstract class AbstractResource
 
     public function renderView($view, array $parameters = array())
     {
+        //不推荐在API中使用renderView，不要继续使用
+        @trigger_error("renderView in Api is not recommended, dont't use in the future，will removed soon", E_USER_DEPRECATED);
+
         return $this->container->get('templating')->render($view, $parameters);
     }
 
@@ -155,7 +158,7 @@ abstract class AbstractResource
 
     public function getClientIp()
     {
-        return $this->container->get('request')->getClientIp();
+        return $this->container->get('request_stack')->getMasterRequest()->getClientIp();
     }
 
     public function invokeResource(ApiRequest $apiRequest)

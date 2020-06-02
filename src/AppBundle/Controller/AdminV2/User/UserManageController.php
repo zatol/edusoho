@@ -18,6 +18,7 @@ use Biz\User\Service\TokenService;
 use Biz\User\Service\UserFieldService;
 use Biz\User\UserException;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class UserManageController extends BaseController
 {
@@ -334,6 +335,20 @@ class UserManageController extends BaseController
         ));
     }
 
+    public function updateNicknameCheckAction(Request $request, $userId)
+    {
+        $nickname = $request->query->get('value');
+        $user = $this->getUserService()->getUser($userId);
+
+        if ($user['nickname'] == $nickname) {
+            return $this->createJsonResponse(array('success' => true, 'message' => ''));
+        }
+
+        list($result, $message) = $this->getAuthService()->checkUsername($nickname);
+
+        return $this->validateResult($result, $message);
+    }
+
     protected function getRoleNames($roles, $roleSet)
     {
         $roleNames = array();
@@ -463,7 +478,7 @@ class UserManageController extends BaseController
                 'template' => 'email_reset_password',
                 'params' => array(
                     'nickname' => $user['nickname'],
-                    'verifyurl' => $this->generateUrl('password_reset_update', array('token' => $token), true),
+                    'verifyurl' => $this->generateUrl('password_reset_update', array('token' => $token), UrlGeneratorInterface::ABSOLUTE_URL),
                     'sitename' => $site['name'],
                     'siteurl' => $site['url'],
                 ),
@@ -491,7 +506,7 @@ class UserManageController extends BaseController
         $token = $this->getUserService()->makeToken('email-verify', $user['id'], strtotime('+1 day'));
 
         $site = $this->getSettingService()->get('site', array());
-        $verifyurl = $this->generateUrl('register_email_verify', array('token' => $token), true);
+        $verifyurl = $this->generateUrl('register_email_verify', array('token' => $token), UrlGeneratorInterface::ABSOLUTE_URL);
 
         try {
             $mailOptions = array(
@@ -515,6 +530,23 @@ class UserManageController extends BaseController
         }
 
         return $this->createJsonResponse(true);
+    }
+
+    public function changeNicknameAction(Request $request, $userId)
+    {
+        $user = $this->getUserService()->getUser($userId);
+
+        if ('POST' === $request->getMethod()) {
+            $formData = $request->request->all();
+            $this->getAuthService()->changeNickname($user['id'], $formData['nickname']);
+            $this->kickUserLogout($user['id']);
+
+            return $this->createJsonResponse(true);
+        }
+
+        return $this->render('admin-v2/user/user-manage/change-nickname-modal.html.twig', array(
+            'user' => $user,
+        ));
     }
 
     public function changePasswordAction(Request $request, $userId)

@@ -29,10 +29,10 @@ final class SingleBlankLineBeforeNamespaceFixer extends AbstractLinesBeforeNames
     {
         return new FixerDefinition(
             'There should be exactly one blank line before a namespace declaration.',
-            array(
-                new CodeSample('<?php  namespace A {}'),
-                new CodeSample("<?php\n\n\nnamespace A{}"),
-            )
+            [
+                new CodeSample("<?php  namespace A {}\n"),
+                new CodeSample("<?php\n\n\nnamespace A{}\n"),
+            ]
         );
     }
 
@@ -46,6 +46,16 @@ final class SingleBlankLineBeforeNamespaceFixer extends AbstractLinesBeforeNames
 
     /**
      * {@inheritdoc}
+     *
+     * Must run after NoBlankLinesAfterPhpdocFixer.
+     */
+    public function getPriority()
+    {
+        return -21;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
@@ -53,7 +63,7 @@ final class SingleBlankLineBeforeNamespaceFixer extends AbstractLinesBeforeNames
             $token = $tokens[$index];
 
             if ($token->isGivenKind(T_NAMESPACE)) {
-                $this->fixLinesBeforeNamespace($tokens, $index, 2);
+                $this->fixLinesBeforeNamespace($tokens, $index, 2, 2);
             }
         }
     }

@@ -680,6 +680,7 @@ admin_v2.user.basic.basic_tab.create_btn: 'Add'
 admin_v2.user.basic.basic_tab.edit_btn: 'Edit'
 admin_v2.user.basic.basic_tab.setting_roles_btn: 'Role setting'
 admin_v2.user.basic.basic_tab.update_avatar_btn: 'Change avatar'
+admin_v2.user.basic.basic_tab.change_nickname_btn: 'Change nickname'
 admin_v2.user.basic.basic_tab.change_password_btn: 'Change password'
 admin_v2.user.basic.basic_tab.send_passwordreset_email_btn: 'Send password reset email'
 admin_v2.user.basic.basic_tab.send_emailverify_email_btn: 'Send verify email'
@@ -726,6 +727,20 @@ admin_v2.data_statictics.analysis.basic_group: Data Analysis
 admin_v2.data_statistics.statistics.menu: Data Statistics
 admin_v2.data_statistics.statistics.basic_tab: Data Statistics
 
+# 应用中心-内容云-内容市场：
+admin_v2.basic_content_resource_group: Market
+admin_v2.purchase_market_menu: Market
+admin_v2.purchase_market_tab: Market
+admin_v2.products_version_tab: Updating
+admin_v2.product_update_setting_tab: Settings
+
+# 应用中心-内容云-内容结算
+admin_v2.basic_app_resource_group: Resource Cloud
+admin_v2.cloud.app_resource_settlement_menu: Resource Settlement
+admin_v2.app_resource_settlement.balance.basic_tab: Balance Detail
+admin_v2.app_resource_settlement.order.basic_tab: Order Manage
+admin_v2.app_resource_settlement.product.basic_tab: Selected Product
+
 # 应用中心-营销云-营销应用
 admin_v2.basic_app_center_group: Marketing Cloud
 admin_v2.cloud.app_center_menu: ES App Center
@@ -770,6 +785,11 @@ admin_v2.cloud.cloud_setting.basic_tab: License
 
 # 人脸识别
 admin_v2.cloud.face_identify: Face Identify
+
+# 云监考
+admin_v2.cloud.face_inspection: Face Inspection
+admin_v2.cloud.face_inspection_result: Face Inspection Result
+admin_v2.cloud.face_inspection_link: Face Inspection Link
 
 #功能实验室
 admin_v2.cloud.feature_lab: Feature Lab
@@ -884,7 +904,14 @@ admin_v2.developer.jobs_manage: Jobs Manage
 admin_v2.developer.job_logs: Job Logs
 admin_v2.developer.crontab: Crontab Manage
 
+# Plumber队列（隐藏路由）
+admin_v2.developer.plumber_manage_menu: Plumber
+admin_v2.developer.plumber_manage: Manage
+admin_v2.developer.plumber_queue: Queue
+
 # IAP
 admin_v2.developer.mobile_iap_product_menu: iOS Purchase Setting
 admin_v2.developer.mobile_iap_product.basic_tab: iOS Purchase Setting
 # 新版后台结束
+
+admin_v2.course.basic.basic_tab.go_to_choose_btn: Go to the market

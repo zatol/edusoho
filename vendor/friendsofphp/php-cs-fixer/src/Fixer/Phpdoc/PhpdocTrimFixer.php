@@ -13,9 +13,10 @@
 namespace PhpCsFixer\Fixer\Phpdoc;
 
 use PhpCsFixer\AbstractFixer;
-use PhpCsFixer\DocBlock\DocBlock;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Preg;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -29,8 +30,8 @@ final class PhpdocTrimFixer extends AbstractFixer
     public function getDefinition()
     {
         return new FixerDefinition(
-            'Phpdocs should start and end with content, excluding the very first and last line of the docblocks.',
-            array(new CodeSample('<?php
+            'PHPDoc should start and end with content, excluding the very first and last line of the docblocks.',
+            [new CodeSample('<?php
 /**
  *
  * Foo must be final class.
@@ -38,20 +39,18 @@ final class PhpdocTrimFixer extends AbstractFixer
  *
  */
 final class Foo {}
-'))
+')]
         );
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before PhpdocAlignFixer.
+     * Must run after CommentToPhpdocFixer, GeneralPhpdocAnnotationRemoveFixer, PhpUnitTestAnnotationFixer, PhpdocIndentFixer, PhpdocNoAccessFixer, PhpdocNoEmptyReturnFixer, PhpdocNoPackageFixer, PhpdocOrderFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
      */
     public function getPriority()
     {
-        /*
-         * Should be run after all phpdoc fixers that add or remove tags, or
-         * alter descriptions. This is so that they don't leave behind blank
-         * lines this fixer would have otherwise cleaned up.
-         */
         return -5;
     }
 
@@ -68,7 +67,7 @@ final class Foo {}
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
-        foreach ($tokens as $token) {
+        foreach ($tokens as $index => $token) {
             if (!$token->isGivenKind(T_DOC_COMMENT)) {
                 continue;
             }
@@ -78,7 +77,7 @@ final class Foo {}
             // we need re-parse the docblock after fixing the start before
             // fixing the end in order for the lines to be correctly indexed
             $content = $this->fixEnd($content);
-            $token->setContent($content);
+            $tokens[$index] = new Token([T_DOC_COMMENT, $content]);
         }
     }
 
@@ -91,26 +90,22 @@ final class Foo {}
      */
     private function fixStart($content)
     {
-        $doc = new DocBlock($content);
-        $lines = $doc->getLines();
-        $total = count($lines);
-
-        foreach ($lines as $index => $line) {
-            if (!$line->isTheStart()) {
-                // don't remove lines with content and don't entirely delete docblocks
-                if ($total - $index < 3 || $line->containsUsefulContent()) {
-                    break;
-                }
-
-                $line->remove();
-            }
-        }
-
-        return $doc->getContent();
+        return Preg::replace(
+            '~
+                (^/\*\*)            # DocComment begin
+                (?:
+                    \R\h*(?:\*\h*)? # lines without useful content
+                    (?!\R\h*\*/)    # not followed by a DocComment end
+                )+
+                (\R\h*(?:\*\h*)?\S) # first line with useful content
+            ~x',
+            '$1$2',
+            $content
+        );
     }
 
     /**
-     * Make sure the last useful is immediately before after the final line.
+     * Make sure the last useful line is immediately before the final line.
      *
      * @param string $content
      *
@@ -118,21 +113,17 @@ final class Foo {}
      */
     private function fixEnd($content)
     {
-        $doc = new DocBlock($content);
-        $lines = array_reverse($doc->getLines());
-        $total = count($lines);
-
-        foreach ($lines as $index => $line) {
-            if (!$line->isTheEnd()) {
-                // don't remove lines with content and don't entirely delete docblocks
-                if ($total - $index < 3 || $line->containsUsefulContent()) {
-                    break;
-                }
-
-                $line->remove();
-            }
-        }
-
-        return $doc->getContent();
+        return Preg::replace(
+            '~
+                (\R\h*(?:\*\h*)?\S.*?) # last line with useful content
+                (?:
+                    (?<!/\*\*)         # not preceded by a DocComment start
+                    \R\h*(?:\*\h*)?    # lines without useful content
+                )+
+                (\R\h*\*/$)            # DocComment end
+            ~xu',
+            '$1$2',
+            $content
+        );
     }
 }

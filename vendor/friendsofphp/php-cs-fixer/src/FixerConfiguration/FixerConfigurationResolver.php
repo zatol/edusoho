@@ -12,7 +12,7 @@
 
 namespace PhpCsFixer\FixerConfiguration;
 
-use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class FixerConfigurationResolver implements FixerConfigurationResolverInterface
@@ -20,12 +20,12 @@ final class FixerConfigurationResolver implements FixerConfigurationResolverInte
     /**
      * @var FixerOptionInterface[]
      */
-    private $options = array();
+    private $options = [];
 
     /**
      * @var string[]
      */
-    private $registeredNames = array();
+    private $registeredNames = [];
 
     /**
      * @param iterable<FixerOptionInterface> $options
@@ -59,6 +59,21 @@ final class FixerConfigurationResolver implements FixerConfigurationResolverInte
         foreach ($this->options as $option) {
             $name = $option->getName();
 
+            if ($option instanceof AliasedFixerOption) {
+                $alias = $option->getAlias();
+
+                if (\array_key_exists($alias, $options)) {
+                    if (\array_key_exists($name, $options)) {
+                        throw new InvalidOptionsException(sprintf('Aliased option %s/%s is passed multiple times.', $name, $alias));
+                    }
+
+                    @trigger_error(sprintf('Option "%s" is deprecated, use "%s" instead.', $alias, $name), E_USER_DEPRECATED);
+
+                    $options[$name] = $options[$alias];
+                    unset($options[$alias]);
+                }
+            }
+
             if ($option->hasDefault()) {
                 $resolver->setDefault($name, $option->getDefault());
             } else {
@@ -67,6 +82,14 @@ final class FixerConfigurationResolver implements FixerConfigurationResolverInte
 
             $allowedValues = $option->getAllowedValues();
             if (null !== $allowedValues) {
+                foreach ($allowedValues as &$allowedValue) {
+                    if (\is_object($allowedValue) && \is_callable($allowedValue)) {
+                        $allowedValue = static function ($values) use ($allowedValue) {
+                            return $allowedValue($values);
+                        };
+                    }
+                }
+
                 $resolver->setAllowedValues($name, $allowedValues);
             }
 
@@ -85,8 +108,6 @@ final class FixerConfigurationResolver implements FixerConfigurationResolverInte
     }
 
     /**
-     * @param FixerOptionInterface $option
-     *
      * @throws \LogicException when the option is already defined
      *
      * @return $this
@@ -95,7 +116,7 @@ final class FixerConfigurationResolver implements FixerConfigurationResolverInte
     {
         $name = $option->getName();
 
-        if (in_array($name, $this->registeredNames, true)) {
+        if (\in_array($name, $this->registeredNames, true)) {
             throw new \LogicException(sprintf('The "%s" option is defined multiple times.', $name));
         }
 

@@ -15,6 +15,8 @@ namespace PhpCsFixer\Fixer\Phpdoc;
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Preg;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 use PhpCsFixer\Utils;
 
@@ -31,7 +33,7 @@ final class PhpdocIndentFixer extends AbstractFixer
     {
         return new FixerDefinition(
             'Docblocks should have the same indentation as the documented subject.',
-            array(new CodeSample('<?php
+            [new CodeSample('<?php
 class DocBlocks
 {
 /**
@@ -39,23 +41,18 @@ class DocBlocks
  */
     const INDENT = 1;
 }
-'))
+')]
         );
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before GeneralPhpdocAnnotationRemoveFixer, NoBlankLinesAfterPhpdocFixer, NoEmptyPhpdocFixer, NoSuperfluousPhpdocTagsFixer, PhpdocAddMissingParamAnnotationFixer, PhpdocAlignFixer, PhpdocAlignFixer, PhpdocAnnotationWithoutDotFixer, PhpdocInlineTagFixer, PhpdocLineSpanFixer, PhpdocNoAccessFixer, PhpdocNoAliasTagFixer, PhpdocNoEmptyReturnFixer, PhpdocNoPackageFixer, PhpdocNoUselessInheritdocFixer, PhpdocOrderFixer, PhpdocReturnSelfReferenceFixer, PhpdocSeparationFixer, PhpdocSingleLineVarSpacingFixer, PhpdocSummaryFixer, PhpdocToParamTypeFixer, PhpdocToReturnTypeFixer, PhpdocTrimConsecutiveBlankLineSeparationFixer, PhpdocTrimFixer, PhpdocTypesFixer, PhpdocTypesOrderFixer, PhpdocVarAnnotationCorrectOrderFixer, PhpdocVarWithoutNameFixer.
+     * Must run after IndentationTypeFixer, PhpdocToCommentFixer.
      */
     public function getPriority()
     {
-        /*
-         * Should be run before all other docblock fixers apart from the
-         * phpdoc_to_comment fixer to make sure all fixers apply correct
-         * indentation to new code they add, and the phpdoc_params fixer only
-         * works on correctly indented docblocks. We also need to be running
-         * after the psr2 indentation fixer for obvious reasons.
-         * comments.
-         */
         return 20;
     }
 
@@ -84,13 +81,14 @@ class DocBlocks
                 continue;
             }
 
-            $prevToken = $tokens[$index - 1];
+            $prevIndex = $index - 1;
+            $prevToken = $tokens[$prevIndex];
 
             // ignore inline docblocks
             if (
                 $prevToken->isGivenKind(T_OPEN_TAG)
                 || ($prevToken->isWhitespace(" \t") && !$tokens[$index - 2]->isGivenKind(T_OPEN_TAG))
-                || $prevToken->equalsAny(array(';', '{'))
+                || $prevToken->equalsAny([';', ',', '{', '('])
             ) {
                 continue;
             }
@@ -100,8 +98,18 @@ class DocBlocks
                 $indent = Utils::calculateTrailingWhitespaceIndent($tokens[$nextIndex - 1]);
             }
 
-            $prevToken->setContent($this->fixWhitespaceBefore($prevToken->getContent(), $indent));
-            $token->setContent($this->fixDocBlock($token->getContent(), $indent));
+            $newPrevContent = $this->fixWhitespaceBeforeDocblock($prevToken->getContent(), $indent);
+            if ($newPrevContent) {
+                if ($prevToken->isArray()) {
+                    $tokens[$prevIndex] = new Token([$prevToken->getId(), $newPrevContent]);
+                } else {
+                    $tokens[$prevIndex] = new Token($newPrevContent);
+                }
+            } else {
+                $tokens->clearAt($prevIndex);
+            }
+
+            $tokens[$index] = new Token([T_DOC_COMMENT, $this->fixDocBlock($token->getContent(), $indent)]);
         }
     }
 
@@ -115,18 +123,16 @@ class DocBlocks
      */
     private function fixDocBlock($content, $indent)
     {
-        return ltrim(preg_replace('/^[ \t]*/m', $indent.' ', $content));
+        return ltrim(Preg::replace('/^\h*\*/m', $indent.' *', $content));
     }
 
     /**
-     * Fix whitespace before the Docblock.
-     *
      * @param string $content Whitespace before Docblock
      * @param string $indent  Indentation of the documented subject
      *
      * @return string Whitespace including correct indentation for Dockblock after this whitespace
      */
-    private function fixWhitespaceBefore($content, $indent)
+    private function fixWhitespaceBeforeDocblock($content, $indent)
     {
         return rtrim($content, " \t").$indent;
     }

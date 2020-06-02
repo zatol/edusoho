@@ -517,7 +517,7 @@ class MobileBaseController extends BaseController
                 $user['follower'] = (string) $controller->getUserService()->findUserFollowerCount($user['id']);
 
                 $user['email'] = '****';
-                $user['nickname'] = ($user['destroyed'] == 1) ? "帐号已注销" : $user['nickname'];
+                $user['nickname'] = ($user['destroyed'] == 1) ? '帐号已注销' : $user['nickname'];
 
                 unset($user['password']);
                 unset($user['payPasswordSalt']);
@@ -781,5 +781,15 @@ class MobileBaseController extends BaseController
     protected function getDiscountService()
     {
         return $this->createService('Discount:Discount.DiscountService');
+    }
+
+    public function redirect($url, $status = 302)
+    {
+        return parent::redirect($url,$status);
+    }
+
+    public function forward($controller, array $path = [], array $query = [])
+    {
+        return parent::forward($controller, $path, $query);
     }
 }

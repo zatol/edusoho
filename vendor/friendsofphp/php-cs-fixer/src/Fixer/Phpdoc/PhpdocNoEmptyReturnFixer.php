@@ -17,6 +17,7 @@ use PhpCsFixer\DocBlock\Annotation;
 use PhpCsFixer\DocBlock\DocBlock;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -38,8 +39,8 @@ final class PhpdocNoEmptyReturnFixer extends AbstractFixer
     public function getDefinition()
     {
         return new FixerDefinition(
-            '@return void and @return null annotations should be omitted from phpdocs.',
-            array(
+            '`@return void` and `@return null` annotations should be omitted from PHPDoc.',
+            [
                 new CodeSample(
                     '<?php
 /**
@@ -56,16 +57,18 @@ function foo() {}
 function foo() {}
 '
                 ),
-            )
+            ]
         );
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before NoEmptyPhpdocFixer, PhpdocAlignFixer, PhpdocOrderFixer, PhpdocSeparationFixer, PhpdocTrimFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer, VoidReturnFixer.
      */
     public function getPriority()
     {
-        // must be run before the PhpdocSeparationFixer and PhpdocOrderFixer
         return 10;
     }
 
@@ -74,7 +77,7 @@ function foo() {}
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
-        foreach ($tokens as $token) {
+        foreach ($tokens as $index => $token) {
             if (!$token->isGivenKind(T_DOC_COMMENT)) {
                 continue;
             }
@@ -90,19 +93,30 @@ function foo() {}
                 $this->fixAnnotation($doc, $annotation);
             }
 
-            $token->setContent($doc->getContent());
+            $newContent = $doc->getContent();
+
+            if ($newContent === $token->getContent()) {
+                continue;
+            }
+
+            if ('' === $newContent) {
+                $tokens->clearTokenAndMergeSurroundingWhitespace($index);
+
+                continue;
+            }
+
+            $tokens[$index] = new Token([T_DOC_COMMENT, $doc->getContent()]);
         }
     }
 
     /**
      * Remove return void or return null annotations..
-     *
-     * @param DocBlock   $doc
-     * @param Annotation $annotation
      */
     private function fixAnnotation(DocBlock $doc, Annotation $annotation)
     {
-        if (1 === preg_match('/@return\s+(void|null)(?!\|)/', $doc->getLine($annotation->getStart())->getContent())) {
+        $types = $annotation->getNormalizedTypes();
+
+        if (1 === \count($types) && ('null' === $types[0] || 'void' === $types[0])) {
             $annotation->remove();
         }
     }

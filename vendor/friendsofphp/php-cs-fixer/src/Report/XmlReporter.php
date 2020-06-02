@@ -34,6 +34,10 @@ final class XmlReporter implements ReporterInterface
      */
     public function generate(ReportSummary $reportSummary)
     {
+        if (!\extension_loaded('dom')) {
+            throw new \RuntimeException('Cannot generate report! `ext-dom` is not available!');
+        }
+
         $dom = new \DOMDocument('1.0', 'UTF-8');
         // new nodes should be added to this or existing children
         $root = $dom->createElement('report');
@@ -73,7 +77,6 @@ final class XmlReporter implements ReporterInterface
 
     /**
      * @param \DOMDocument $dom
-     * @param array        $fixResult
      *
      * @return \DOMElement
      */
@@ -91,9 +94,6 @@ final class XmlReporter implements ReporterInterface
     }
 
     /**
-     * @param \DOMDocument $dom
-     * @param array        $fixResult
-     *
      * @return \DOMElement
      */
     private function createDiffElement(\DOMDocument $dom, array $fixResult)
@@ -105,8 +105,7 @@ final class XmlReporter implements ReporterInterface
     }
 
     /**
-     * @param float        $time
-     * @param \DOMDocument $dom
+     * @param float $time
      *
      * @return \DOMElement
      */
@@ -124,8 +123,7 @@ final class XmlReporter implements ReporterInterface
     }
 
     /**
-     * @param float        $memory
-     * @param \DOMDocument $dom
+     * @param float $memory
      *
      * @return \DOMElement
      */

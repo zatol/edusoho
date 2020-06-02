@@ -12,6 +12,7 @@
 
 namespace PhpCsFixer\Console\Command;
 
+use PhpCsFixer\Preg;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -24,15 +25,14 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 final class ReadmeCommand extends Command
 {
+    protected static $defaultName = 'readme';
+
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
-        $this
-            ->setName('readme')
-            ->setDescription('Generates the README content, based on the fix command help.')
-        ;
+        $this->setDescription('Generates the README content, based on the fix command help.');
     }
 
     /**
@@ -40,33 +40,38 @@ final class ReadmeCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $header = <<<'EOF'
-PHP Coding Standards Fixer
-==========================
+        $header = <<<EOF
+{$this->header('PHP Coding Standards Fixer', '=')}
 
-The PHP Coding Standards Fixer tool fixes *most* issues in your code when you
-want to follow the PHP coding standards as defined in the PSR-1 and PSR-2
-documents and many more.
+The PHP Coding Standards Fixer (PHP CS Fixer) tool fixes your code to follow standards;
+whether you want to follow PHP coding standards as defined in the PSR-1, PSR-2, etc.,
+or other community driven ones like the Symfony one.
+You can **also** define your (team's) style through configuration.
+
+It can modernize your code (like converting the ``pow`` function to the ``**`` operator on PHP 5.6)
+and (micro) optimize it.
 
 If you are already using a linter to identify coding standards problems in your
 code, you know that fixing them by hand is tedious, especially on large
 projects. This tool does not only detect them, but also fixes them for you.
 
-Requirements
-------------
+The PHP CS Fixer is maintained on GitHub at https://github.com/FriendsOfPHP/PHP-CS-Fixer
+bug reports and ideas about new features are welcome there.
 
-PHP needs to be a minimum version of PHP 5.3.6.
+You can talk to us at https://gitter.im/PHP-CS-Fixer/Lobby about the project,
+configuration, possible improvements, ideas and questions, please visit us!
 
-Installation
-------------
+{$this->header('Requirements', '-')}
 
-Locally
-~~~~~~~
+PHP needs to be a minimum version of PHP 5.6.0.
+
+{$this->header('Installation', '-')}
+
+{$this->header('Locally', '~')}
 
 Download the `php-cs-fixer.phar`_ file and store it somewhere on your computer.
 
-Globally (manual)
-~~~~~~~~~~~~~~~~~
+{$this->header('Globally (manual)', '~')}
 
 You can run these commands to easily access latest ``php-cs-fixer`` from anywhere on
 your system:
@@ -96,8 +101,7 @@ then:
 
 Then, just run ``php-cs-fixer``.
 
-Globally (Composer)
-~~~~~~~~~~~~~~~~~~~
+{$this->header('Globally (Composer)', '~')}
 
 To install PHP CS Fixer, `install Composer <https://getcomposer.org/download/>`_ and issue the following command:
 
@@ -109,24 +113,25 @@ Then make sure you have the global Composer binaries directory in your ``PATH``.
 
 .. code-block:: bash
 
-    $ export PATH="$PATH:$HOME/.composer/vendor/bin"
+    $ export PATH="\$PATH:\$HOME/.composer/vendor/bin"
 
-Globally (homebrew)
-~~~~~~~~~~~~~~~~~~~
-
-PHP-CS-Fixer is part of the homebrew-php project. Follow the installation
-instructions at https://github.com/homebrew/homebrew-php if you don't
-already have it.
+{$this->header('Globally (homebrew)', '~')}
 
 .. code-block:: bash
 
-    $ brew install homebrew/php/php-cs-fixer
+    $ brew install php-cs-fixer
 
-Update
-------
+{$this->header('Locally (PHIVE)', '~')}
 
-Locally
-~~~~~~~
+Install `PHIVE <https://phar.io>`_ and issue the following command:
+
+.. code-block:: bash
+
+    $ phive install php-cs-fixer # use `--global` for global install
+
+{$this->header('Update', '-')}
+
+{$this->header('Locally', '~')}
 
 The ``self-update`` command tries to update ``php-cs-fixer`` itself:
 
@@ -134,8 +139,7 @@ The ``self-update`` command tries to update ``php-cs-fixer`` itself:
 
     $ php php-cs-fixer.phar self-update
 
-Globally (manual)
-~~~~~~~~~~~~~~~~~
+{$this->header('Globally (manual)', '~')}
 
 You can update ``php-cs-fixer`` through this command:
 
@@ -143,8 +147,7 @@ You can update ``php-cs-fixer`` through this command:
 
     $ sudo php-cs-fixer self-update
 
-Globally (Composer)
-~~~~~~~~~~~~~~~~~~~
+{$this->header('Globally (Composer)', '~')}
 
 You can update ``php-cs-fixer`` through this command:
 
@@ -152,8 +155,7 @@ You can update ``php-cs-fixer`` through this command:
 
     $ ./composer.phar global update friendsofphp/php-cs-fixer
 
-Globally (homebrew)
-~~~~~~~~~~~~~~~~~~~
+{$this->header('Globally (homebrew)', '~')}
 
 You can update ``php-cs-fixer`` through this command:
 
@@ -161,15 +163,19 @@ You can update ``php-cs-fixer`` through this command:
 
     $ brew upgrade php-cs-fixer
 
-Usage
------
+{$this->header('Locally (PHIVE)', '~')}
+
+.. code-block:: bash
+
+    $ phive update php-cs-fixer
+
+{$this->header('Usage', '-')}
 
 EOF;
 
-        $footer = <<<'EOF'
+        $footer = <<<EOF
 
-Helpers
--------
+{$this->header('Helpers', '-')}
 
 Dedicated plugins exist for:
 
@@ -178,21 +184,19 @@ Dedicated plugins exist for:
 * `PhpStorm`_
 * `Sublime Text`_
 * `Vim`_
+* `VS Code`_
 
-Contribute
-----------
+{$this->header('Contribute', '-')}
 
 The tool comes with quite a few built-in fixers, but everyone is more than
 welcome to `contribute`_ more of them.
 
-Fixers
-~~~~~~
+{$this->header('Fixers', '~')}
 
 A *fixer* is a class that tries to fix one CS issue (a ``Fixer`` class must
 implement ``FixerInterface``).
 
-Configs
-~~~~~~~
+{$this->header('Configs', '~')}
 
 A *config* knows about the CS rules and the files and directories that must be
 scanned by the tool when run in the directory of your project. It is useful for
@@ -202,9 +206,10 @@ projects for instance).
 .. _php-cs-fixer.phar: %download.url%
 .. _Atom:              https://github.com/Glavin001/atom-beautify
 .. _NetBeans:          http://plugins.netbeans.org/plugin/49042/php-cs-fixer
-.. _PhpStorm:          http://tzfrs.de/2015/01/automatically-format-code-to-match-psr-standards-with-phpstorm
+.. _PhpStorm:          https://medium.com/@valeryan/how-to-configure-phpstorm-to-use-php-cs-fixer-1844991e521f
 .. _Sublime Text:      https://github.com/benmatselby/sublime-phpcs
 .. _Vim:               https://github.com/stephpy/vim-php-cs-fixer
+.. _VS Code:           https://github.com/junstyle/vscode-php-cs-fixer
 .. _contribute:        https://github.com/FriendsOfPHP/PHP-CS-Fixer/blob/master/CONTRIBUTING.md
 
 EOF;
@@ -213,35 +218,49 @@ EOF;
         $help = $command->getHelp();
         $help = str_replace('%command.full_name%', 'php-cs-fixer.phar '.$command->getName(), $help);
         $help = str_replace('%command.name%', $command->getName(), $help);
-        $help = preg_replace('#</?(comment|info)>#', '``', $help);
-        $help = preg_replace('#^(\s+)``(.+)``$#m', '$1$2', $help);
-        $help = preg_replace('#^ \* ``(.+)``(.*?\n)#m', "* **$1**$2\n", $help);
-        $help = preg_replace('#^   \\| #m', '  ', $help);
-        $help = preg_replace('#^   \\|#m', '', $help);
-        $help = preg_replace('#^(?=  \\*Risky rule: )#m', "\n", $help);
-        $help = preg_replace("#^(  Configuration options:\n)(  - )#m", "$1\n$2", $help);
-        $help = preg_replace("#^\n( +\\$ )#m", "\n.. code-block:: bash\n\n$1", $help);
-        $help = preg_replace("#^\n( +<\\?php)#m", "\n.. code-block:: php\n\n$1", $help);
-        $help = preg_replace_callback(
-            "#^\s*<\?(\w+).*?\?>#ms",
-            function ($matches) {
-                $result = preg_replace("#^\.\. code-block:: bash\n\n#m", '', $matches[0]);
+        $help = Preg::replace('#</?(comment|info)>#', '``', $help);
+        $help = Preg::replace('#`(``.+?``)`#', '$1', $help);
+        $help = Preg::replace('#^(\s+)``(.+)``$#m', '$1$2', $help);
+        $help = Preg::replace('#^ \* ``(.+)``(.*?\n)#m', "* **$1**$2\n", $help);
+        $help = Preg::replace('#^   \\| #m', '  ', $help);
+        $help = Preg::replace('#^   \\|#m', '', $help);
+        $help = Preg::replace('#^(?=  \\*Risky rule: )#m', "\n", $help);
+        $help = Preg::replace("#^(  Configuration options:\n)(  - )#m", "$1\n$2", $help);
+        $help = Preg::replace("#^\n( +\\$ )#m", "\n.. code-block:: bash\n\n$1", $help);
+        $help = Preg::replace("#^\n( +<\\?php)#m", "\n.. code-block:: php\n\n$1", $help);
+        $help = Preg::replaceCallback(
+            '#^\s*<\?(\w+).*?\?>#ms',
+            static function ($matches) {
+                $result = Preg::replace("#^\\.\\. code-block:: bash\n\n#m", '', $matches[0]);
 
                 if ('php' !== $matches[1]) {
-                    $result = preg_replace("#<\?{$matches[1]}\s*#", '', $result);
+                    $result = Preg::replace("#<\\?{$matches[1]}\\s*#", '', $result);
                 }
 
-                $result = preg_replace("#\n\n +\?>#", '', $result);
-
-                return $result;
+                return Preg::replace("#\n\n +\\?>#", '', $result);
             },
             $help
         );
-        $help = preg_replace('#^                        #m', '  ', $help);
-        $help = preg_replace('#\*\* +\[#', '** [', $help);
 
-        $downloadLatestUrl = $this->getLatestDownloadUrl();
-        $downloadUrl = 'http://cs.sensiolabs.org/download/php-cs-fixer-v2.phar';
+        // Transform links
+        // In the console output these have the form
+        //      `description` (<url>http://...</url>)
+        // Make to RST http://www.sphinx-doc.org/en/stable/rest.html#hyperlinks
+        //      `description <http://...>`_
+
+        $help = Preg::replaceCallback(
+            '#`(.+)`\s?\(<url>(.+)<\/url>\)#',
+            static function (array $matches) {
+                return sprintf('`%s <%s>`_', str_replace('\\', '\\\\', $matches[1]), $matches[2]);
+            },
+            $help
+        );
+
+        $help = Preg::replace('#^                        #m', '  ', $help);
+        $help = Preg::replace('#\*\* +\[#', '** [', $help);
+
+        $downloadLatestUrl = sprintf('https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v%s/php-cs-fixer.phar', HelpCommand::getLatestReleaseVersionFromChangeLog());
+        $downloadUrl = 'https://cs.symfony.com/download/php-cs-fixer-v2.phar';
 
         $header = str_replace('%download.version_url%', $downloadLatestUrl, $header);
         $header = str_replace('%download.url%', $downloadUrl, $header);
@@ -249,34 +268,12 @@ EOF;
         $footer = str_replace('%download.url%', $downloadUrl, $footer);
 
         $output->write($header."\n".$help."\n".$footer);
+
+        return 0;
     }
 
-    private function getLatestDownloadUrl()
+    private function header($name, $underline)
     {
-        $version = $this->getApplication()->getVersion();
-        $changelogFile = __DIR__.'/../../../CHANGELOG.md';
-
-        if (is_file($changelogFile)) {
-            $currentMajor = (int) $version;
-            $changelog = file_get_contents($changelogFile);
-
-            for ($i = $currentMajor; $i > 0; --$i) {
-                preg_match('/Changelog for v('.$i.'.\d+.\d+)/', $changelog, $matches);
-
-                if (2 === count($matches)) {
-                    $version = $matches[1];
-                    break;
-                }
-            }
-
-            if (null === $version) {
-                throw new \RuntimeException('Invalid changelog data!');
-            }
-        }
-
-        return sprintf(
-            'https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v%s/php-cs-fixer.phar',
-            $version
-        );
+        return $name."\n".str_repeat($underline, \strlen($name));
     }
 }

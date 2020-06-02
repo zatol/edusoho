@@ -609,7 +609,8 @@ upload.video_quality_switcher.setup: Setup
 upload.video_quality_switcher.video_quality: 'Quality:'
 upload.video_quality_switcher.video_quality.low: 'Low <span class="color-gray">(suitable for ppt video)</span>'
 upload.video_quality_switcher.video_quality.normal: 'Normal <span class="color-gray">(suitable for screen record or video record with bulit-in camera)</span>'
-upload.video_quality_switcher.video_quality.high: 'High <span class="color-gray">(suitable for high videos)</span>'
+upload.video_quality_switcher.video_quality.high: 'High <span class="color-gray">(suitable for high quality movies)</span>'
+upload.video_quality_switcher.video_quality.super: 'Super <span class="color-gray">(suitable for super high quality professional movies)</span>'
 upload.video_quality_switcher.audio_quality: 'Audio:'
 upload.video_quality_switcher.audio_quality.low: Low
 upload.video_quality_switcher.audio_quality.normal: Normal
@@ -946,6 +947,7 @@ course.members_manage: 'Students'
 course.members_manage.official_student: Students
 course.members_manage.official_student.search: Search
 course.members_manage.official_student.batch_upload_deadline: Batch modification validity period
+course.members_manage.official_student.batch_remove: Batch remove
 course.members_manage.official_student.input_placeholder: 'Username/Email/Phone'
 course.members_manage.official_student.progress: 'Learn progress'
 course.members_manage.official_student.operation: Action
@@ -1442,11 +1444,12 @@ course.question_manage.manage.belong_change_tips: If this question is cited, cha
 course.question_manage.edit: Edit
 course.question_manage.import.btn: Import question
 course.question_manage.import.modal_title: Import question
-course.question_manage.import.new_hint: New workflow, More efficient
+course.question_manage.import.new_hint: Read before upload
 course.question_manage.import.drag_document_hint: Drag document to here
 course.question_manage.import.docx_support_hint: Only support docx,
 course.question_manage.import.download_template: Download template
 course.question_manage.import.doc_to_docx_hint: How doc convert to docx?
+question_manage.import.doc_to_docx_hint.tutorial: Tutorial
 course.question_manage.import.upload_document: Upload
 course.question_manage.import.reupload_document: Re-Upload
 course.question_manage.import.uploading: Uploading...
@@ -1491,6 +1494,7 @@ course.testpaper_manage.manage_btn: 'Edit the test questions'
 course.testpaper_manage.repead_btn: Re-generate
 course.testpaper_manage.export: Export
 course.testpaper_manage.import: Import
+course.testpaper_manage.import.re_edit.title: Import Edit
 course.testpaper_manage.import.re_edit.add_option: Add Option
 course.testpaper_manage.import.re_edit.upload_stem_attachment: Upload Stem Attachment
 course.testpaper_manage.import.re_edit.edit_analysis: Edit Analysis
@@ -1899,6 +1903,7 @@ file_chooser.upload_file.video_quality: 'Video'
 file_chooser.upload_file.video_quality.low: Smooth
 file_chooser.upload_file.video_quality.normal: Standard
 file_chooser.upload_file.video_quality.high: 'High Definition'
+file_chooser.upload_file.video_quality.super: 'Super High Definition'
 file_chooser.upload_file.audio_quality: 'Audio'
 file_chooser.upload_file.audio_quality.low: Smooth
 file_chooser.upload_file.audio_quality.normal: Standard
@@ -2320,10 +2325,11 @@ classroom.student_placeholder: 'Please fill in your username/email/phone number'
 classroom.add_student_tips: 'Only allow to add registered user.'
 classroom.buy_price_label: Price
 classroom.username: Username
-classroom,student_name: Student
-classroom,student_study_status: 'Learning progress'
-classroom,student_opertion: Action
-classroom,student_empty: 'No student'
+classroom.student_name: Student
+classroom.student_study_status: 'Learning progress'
+classroom.student_study_expiry_date: Available
+classroom.student_opertion: Action
+classroom.student_empty: 'No student'
 classroom.student_exporting: Exporting
 classroom.student_export_auditor: 'Export'
 classroom.student_export: 'Export'
@@ -2331,6 +2337,8 @@ classroom.add_student_btn: 'Add'
 classroom.add_student.already_exists_tips: Already exists
 classroom.add_student_title: 'Add student'
 classroom.student_batch_import: 'Bulk import'
+classroom.student_batch_update_expiry_date: 'Bulk update expiry date'
+classroom.student_batch_remove: 'Bulk remove'
 classroom.student_import_tips: 'Cannot import students into unpublished class.'
 classroom.student_add_tips: 'Cannot add students into unpublished class.'
 classroom.member: Student
@@ -3347,7 +3355,7 @@ customer_service.feedback_email: 'Feedback mail'
 customer_service.qq_customer_service: 'Qq customer servcie'
 customer_service.qq_group: 'QQ group'
 customer_service.mobile_group: 'Telephone customer service'
-customer_service.weixin-content: 'Public wechat number'
+customer_service.weixin-content: 'Wechat QR code'
 customer_service.time: 'Service time'
 customer_service.send_message: 'Click here to send me message'
 my.teaching.menu_heading: 'My teaching'
@@ -3913,6 +3921,8 @@ common.video_quality.normal: Normal
 common.video_quality.normal.tips: 'Good at recording'
 common.video_quality.high: High
 common.video_quality.high.tips: 'Good at movie'
+common.video_quality.super: Super
+common.video_quality.super.tips: 'Good at professional movie'
 contetn.active_list.create_template: 'Please create template'
 contetn.active_list.custom_template: Custom
 contetn.article_list.latest_articel: 'Latest Artical'
@@ -5506,6 +5516,8 @@ admin.edu_cloud.edu_video.video_embed_watermark_picture_tips: 'When turned on, t
 admin.edu_cloud.edu_video.finger_print_time_label: 'Cloud video fingerprint display duration'
 admin.edu_cloud.edu_video.finger_print_time_tips: 'The recommended duration is between 0.5 and 1.5 seconds'
 admin.edu_cloud.edu_video.finger_print_time: Second
+admin.edu_cloud.edu_video.finger_print_opacity_label: 'Cloud video fingerprint opacity'
+admin.edu_cloud.edu_video.finger_print_opacity_tips: 'The recommended opacity is between 0 and 1 seconds,The smaller the number, the more transparent'
 admin.edu_cloud.edu_video.enable_hls_encryption_plus: 'Cloud video security enhancements'
 admin.edu_cloud.edu_video.enable_hls_encryption_plus_tips: 'After turned on, cloud video anti-theft effect to further enhance, but the video will not be able to play in the H5 browser, the system will guide the user to use App view.'
 admin.edu_cloud.edu_video.buy_flow_tips: 'Open traffic annual package, video traffic more cost-effective. <a class="" href="%bugUrl%" target="_blank"> What is a traffic package? </a>'
@@ -5927,17 +5939,20 @@ admin.user_auth.privacy_policy_settings: 'Privacy policy settings'
 admin.user_auth.privacy_policy_settings.Enable: 'Status of privacy policy'
 admin.user_auth.privacy_policy_settings.open: 'Turned on'
 admin.user_auth.privacy_policy_settings.closed: 'Closed'
-admin.user_auth.privacy_policy_settings.Enable.help_block: 'Users need to agree the terms to register if turned on'
+admin.user_auth.privacy_policy_settings.Enable.help_block: 'Users need to agree the terms to register if turned on.'
 admin.user_auth.privacy_policy_settings.details: 'Privacy Policy'
+admin.user_auth.privacy_policy_settings.tooltip: '<h5>The privacy policy configuration is only effective for online schools with independent app. The privacy policy of online schools using the kuozhi school app needs to be configured uniformly by kuozhi.</h5>'
 admin.user_auth.Name_setting: Name
 admin.user_auth.Name_setting.user_name: 'Username'
 admin.user_auth.Name_setting.help_block: 'Note: After editing the site field, all the relevant field names will be changed accordingly to the edited name'
 admin.user_auth.mobile_bind_tips: >
   According to the "Internet Regulations Review Service Management Regulations"，<b>It is not allowed to provide follow-up comments to users who do not authenticate true identity information</b>.The post comment service here refers to Internet sites, applications, interactive communication platforms, and other communication platforms with news and public opinion attributes and social mobilization functions. It provides users with posts by <b> posting, replying, leaving messages, and “barrage”<b>. Services for text, symbols, expressions, pictures, audio and video information.Bind mobile phone number meets the requirements of real-name authentication. To avoid legal risks, it is recommended to use <b>“mobile registration”</b>.After switching to "mobile phone registration", for users who have not previously bound the mobile phone number, the user will be prompted to bind the mobile phone number after the first login every day (the user can choose to skip this step).
 admin.login_connect.User_login_restrictions: 'User login restrictions'
+admin.login_connect.client_login_restrictions: 'Client login restrictions'
 admin.login_connect.open: 'Turned on'
 admin.login_connect.closed: Close
 admin.login_connect.User_login_restrictions.help_block: 'If turned on, an account can only login at one place (a browser in a IP)'
+admin.login_connect.client_login_restrictions.help_block: 'If turned on, an account can only login at one client (App or Web)'
 admin.login_connect.Third_party_login: 'Third-party login'
 admin.login_connect.Third_party_login.help_block: 'When turned on, users who continuously enter the wrong password will be blocked temporarily. This feature does not affect webmaster to to banned user permanently.'
 admin.login_connect.User_login_protection: 'User login protection'
@@ -6156,6 +6171,8 @@ admin.setting_wechat_auth.account_code_view: View Larger Image
 admin.setting_wechat_auth.account_code_download: Download QR code
 admin.developer_setting.cloud_notification_api: Notification API
 admin.developer_setting.cloud_wechat_api: WeChat API
+admin.developer_setting.s2b2c_api: S2B2C Server API
+admin.developer_setting.s2b2c_supplier_api: S2B2C Supplier API
 admin.developer_setting.content_title: 'Developer settings'
 admin.developer_setting.debug_label: Debugging
 admin.developer_setting.app_center_api_address: 'Application Center API address'
@@ -6187,6 +6204,7 @@ admin.magic_setting.disable_web_crontab: 'Turn on web scheduled task or not'
 admin.magic_setting.cloud_search: 'Turn on cloud search service'
 admin.magic_setting.ios_buy_disable: 'Close iOS payment or not'
 admin.magic_setting.ios_vip_close: 'Close iOS VIP module or not'
+admin.magic_setting.ios_exchange_coupon_close: 'Close iOS coupon module or not'
 admin.magic_setting.export_limit: 'Export order limit in single time'
 admin.magic_setting.export_allow_count: 'Maximum order export quantity'
 admin.magic_setting.enable_org: 'Turn on organization settings'
@@ -7184,7 +7202,7 @@ notification.vip.add_by_admin: You have been added as a %vipName% member by the 
 notification.vip.remove_by_admin: You have been cancelled %vipName%, please contact the administrator if in doubt.
 notification.materialLib.share: %who% has shared the data to you, %do%.
 notification.materialLib.click_to_view: click to view
-notification.destroy-account.reject: %who%，Your account cancellation application has not been approved. Reasons: %reason%。
+notification.destroy-account.reject: "%who%,Your account cancellation application has not been approved. Reasons: %reason%。"
 #TODO trans
 notification.delete-cloud-mp4: 'Your normal video has been deleted successfully, and all existing cloud videos are in encrypted format.'
 notification.distributor-reward: 'Congratulations on your successful registration reward: a %money% CNY coupon, which can be used for all-site consumption and has been sent to %where%.'
@@ -7210,6 +7228,7 @@ message_response.not_student_cannot_join_live.message: You are not a course stud
 message_response.mass_title_and_text_cannot_empty: The bulk title or content can not be empty
 message_response.only_admin_can_create_class.message: Only allow administrators to create classes!
 message_response.upload_pic_format_error.message: Upload image format is wrong, please upload jpg, gif, png format files.
+message_response.task_locked.message: Please study the unlocked course first!
 
 classroom.manage.side_nav.setting: %classroom% setting
 classroom.manage.side_nav.manage: %classroom% config
@@ -7616,6 +7635,7 @@ log.action.system.update_settings.mobile: Update mobile client settings
 log.action.system.update_settings.wap: Update WAP settings
 log.action.system.update_settings.developer: Update developer settings
 log.action.system.update_settings.backstage: Update backstage settings
+log.action.system.update_settings.newcomer_task: Update newcomer task settings
 log.action.system.questions_settings: 'Question Bank Settings'
 log.action.system.customerServiceSetting: 'Customer service'
 log.action.system.setting_userCenter: 'User center settings'
@@ -8340,7 +8360,8 @@ log.attr.system.update_settings.storage.support_mobile.1: Normal mode
 log.attr.system.update_settings.storage.video_quality: Video transcode quality
 log.attr.system.update_settings.storage.video_quality.low: Smooth
 log.attr.system.update_settings.storage.video_quality.normal: Standard
-log.attr.system.update_settings.storage.video_quality.high: Fine
+log.attr.system.update_settings.storage.video_quality.high: High
+log.attr.system.update_settings.storage.video_quality.high: Super
 log.attr.system.update_settings.storage.video_audio_quality: Video transcoding sound quality
 log.attr.system.update_settings.storage.video_audio_quality.low: Smooth
 log.attr.system.update_settings.storage.video_audio_quality.normal: Standard
@@ -8702,6 +8723,7 @@ exception.courseset.published_course_required: When publishing a course, please 
 exception.courseset.unpublished: Course not published
 exception.courseset.no_course: There are no teaching plans available in the course
 exception.courseset.unlock_failed: Unlocking course failed
+exception.courseset.forbidden_create: No right to create
 exception.classroom.member_not_in_classroom: Student not in classroom
 exception.classroom.not_found: The classroom doesn't exist
 exception.classroom.forbidden_manage_classroom: Forbidden manage classroom
@@ -8761,6 +8783,7 @@ exception.testpaper.not_found_result: The test result does not exist
 exception.testpaper.modify_committed_testpaper: The test paper that has been submitted cannot be modified!
 exception.testpaper.doing: The test paper has not been submitted
 exception.testpaper.redo_interval_exist: Teacher set retry interval
+exception.testpaper.forbidden_delete_open_testpaper: Opne testpaper can not be deleted
 exception.uploadfile.file_not_found: file does not exist
 exception.uploadfile.forbidden_manage_file: No rights to manage resources
 exception.uploadfile.error_status: Incorrect state
@@ -9032,7 +9055,7 @@ wechat.notification.template_opend: Opend
 wechat.notification.template_closed: Closed
 
 # 微信通知模板
-wechat.notification.template.live_start: Hello, classmates, the live lessons you are enrolling will start soon.<br>Course: {《course name》 - 《task name》}<br>Start time: {Live start time} (accurate to minute)<br>Course location: live online<br>Contact: None<br>Don't be late.
+wechat.notification.template.live_start: "Hello, classmates, the live lessons you are enrolling will start soon.<br>Course: {《course name》 - 《task name》}<br>Start time: {Live start time} (accurate to minute)<br>Course location: live online<br>Contact: None<br>Don't be late."
 wechat.notification.template.homework_result: 'Classmate, hello, your homework has been reviewed.<br>Job Name: [Task Name]]<br>Course: [course name]<br>Tutor: [Teacher User Name]<br>Homework result: [homework result]'
 wechat.notification.template.exam_result: 'Hello, your class has been reviewed.<br>Examination subject: [task name]<br>Test score: [test score]<br>Keep up the good work'
 wechat.notification.template.lesson_add: 'Classmate, hello, the course has a new task to post<br>Course Name: [Course Name]<br>Course category: [Course category]<br>Course Teacher: [Teacher User Name]<br>Course time: [Task release time]<br>Please go to study in time.'
@@ -9260,6 +9283,7 @@ question_reedit.category_text: Category
 question_reedit.category_empty: None
 question_plus_upgrade_tip: 'The current version of the plug-in is too low, you can continue to use the old template for importing after upgrading the "QuestionPlus" plug-in in the background.'
 question_bank.to_select.hint: Please select a question bank
+question_bank.select_bank_category_hint: --Select bank category--
 
 # 新版后台开始
 
@@ -9356,7 +9380,7 @@ admin_v2.homepage.overview: Overview
 admin_v2.developer_setting.platform_news_api_server: API to get information from platform
 admin_v2.developer_setting.platform_news_api_server.info: 'Default value is //platform-news-service.qiqiuyun.net'
 admin_v2.role_permission_manage.error: Error
-admin_v2.default_page.changelog_title: EduSoho Changelog
+admin_v2.default_page.changelog_title: Changelog
 admin_v2.wechat_official_account.title: Official Account
 admin_v2.wechat_official_account.text: Follow the EduSoho official account to get the latest education information
 admin_v2.homepage.announcement_from_platform: Announcement From Platform
@@ -9403,7 +9427,6 @@ admin_v2.destroy_account.destroyed_account.audit_reject: Reject
 admin_v2.destroy_account.destroyed_account.reason_tip: Enter a maximum of 30 words
 admin_v2.destroy_account.destroyed_account.can_not_manage: Can not manage your self
 user.user_had_destroyed: Account had destroyed
-admin.article_setting.article_copy_manage: Information copy protection
 admin_v2.operation.homepage_live_notify.enable: Live Notify
 admin_v2.operation.homepage_live_notify.enable.open: Open
 admin_v2.operation.homepage_live_notify.enable.close: Close
@@ -9458,3 +9481,177 @@ course.live_statistics.checkin_status.all: All
 
 exception.live_statistic.not_found: Live statistics not found
 exception.live_statistic.not_support: Live statistics not supported function
+admin.article_setting.article_copy_manage: Information copy protection
+
+task.show_optional_tips: Show Optional
+admin_v2.user.manage.change_nickname.heading_title: Modify username
+
+course.plan_task.activity_manage.discuss.tips: Discussion tasks are used in PC and APP, and are not supported in Microschool and Applet for now!
+
+admin_v2.app_center.resource_settlement.balance: Balance
+admin_v2.app_center.resource_settlement.debt: Debt
+admin_v2.app_center.resource_settlement.more: More
+
+admin_v2.app_center.resource_settlement.deal_time: Deal time
+admin_v2.app_center.resource_settlement.start_time: Start time
+admin_v2.app_center.resource_settlement.end_time: End time
+admin_v2.app_center.resource_settlement.balance.detail: Detail
+admin_v2.app_center.resource_settlement.balance.detail_information: Detail information
+admin_v2.app_center.resource_settlement.balance.status: Status
+admin_v2.app_center.resource_settlement.balance.detail.success: Success
+admin_v2.app_center.resource_settlement.balance.detail.default_operator: System
+
+admin_v2.app_center.resource_settlement.balance.order.detail: Order information
+admin_v2.app_center.resource_settlement.balance.order: Order
+admin_v2.app_center.resource_settlement.balance.order.sn: Sn
+
+admin_v2.app_center.resource_settlement.balance.operation.detail: Operation
+admin_v2.app_center.resource_settlement.balance.operator: Operator
+
+admin_v2.app_center.resource_settlement.order.create_time: Created time
+admin_v2.app_center.resource_settlement.filter_type: Filter
+admin_v2.app_center.resource_settlement.filter_placeholder: Choose status
+admin_v2.app_center.resource_settlement.order.pay: Paying
+admin_v2.app_center.resource_settlement.order.paid: Paid
+admin_v2.app_center.resource_settlement.order.refunded: Refunded
+admin_v2.app_center.resource_settlement.switch_show_debt:  Only show debt(%amount% owed)
+
+admin_v2.app_center.resource_settlement.order.title: Title
+admin_v2.app_center.resource_settlement.order.sn: Sn
+admin_v2.app_center.resource_settlement.order.coop_price: Cooperation Denomination
+admin_v2.app_center.resource_settlement.order.price_amount: Actual Paid
+admin_v2.app_center.resource_settlement.order.debt_amount: Amount owed
+admin_v2.app_center.resource_settlement.order.status: Status
+
+admin_v2.app_center.resource_settlement.order.detail: Order Detail
+admin_v2.app_center.resource_settlement.order.detail.information: Order Information
+admin_v2.app_center.resource_settlement.order.detail.price_amount: Cooperation Denomination
+admin_v2.app_center.resource_settlement.order.detail.discount: Discount
+admin_v2.app_center.resource_settlement.order.detail.pay_amount: Actual Price
+admin_v2.app_center.resource_settlement.order.detail.status: Status
+
+admin_v2.app_center.resource_settlement.order.detail.pay_information: Payment Information
+admin_v2.app_center.resource_settlement.order.detail.pay_time: Payment time
+
+admin_v2.app_center.resource_settlement.order.detail.order_information: Order Information
+admin_v2.app_center.resource_settlement.order.detail.order_title: Title
+admin_v2.app_center.resource_settlement.order.detail.order_sn: Sn
+admin_v2.app_center.resource_settlement.order.detail.order_user: User
+
+admin_v2.app_center.resource_settlement.product.id: Id
+admin_v2.app_center.resource_settlement.product.time: Choose Time
+admin_v2.app_center.resource_settlement.product.order_count: Order Count
+admin_v2.app_center.resource_settlement.product.max_course_price: Actual Price
+admin_v2.app_center.resource_settlement.product.suggestion_price: Suggested  Price
+admin_v2.app_center.resource_settlement.product.cooperation_price: Cooperation Denomination
+admin_v2.app_center.resource_settlement.product.item_status: Status
+admin_v2.app_center.resource_settlement.product.item_status.published: Published
+admin_v2.app_center.resource_settlement.product.item_status.closed: Closed
+admin_v2.app_center.resource_settlement.product.choosen_status: Choosen status
+admin_v2.app_center.resource_settlement.product.choosen_status.chosen: Choosen
+admin_v2.app_center.resource_settlement.product.choosen_status.removed: Removed
+
+admin_v2.app_center.resource_settlement.empty: Empty
+
+
+
+merchant.content_resource.product_title: Product name
+merchant.content_resource.product_change_publish_time: Publish time
+merchant.content_resource.product_change_log_publish: Publish changelog
+merchant.content_resource.product_change_log: update changelog
+merchant.content_resource.product_version_date: Version date
+merchant.content_resource.product_version_num: Version num
+merchant.content_resource.operation: Operation
+merchant.content_resource.product_version: Version
+merchant.content_resource.product_version.view_btn: Show Detail
+merchant.content_resource.product_version.update: Update
+merchant.content_resource.product_version.update_btn: Update
+merchant.content_resource.course_product_update: Course Update
+merchant.content_resource.course_product_update_tips: After confirming the update course, the latest version content provided by the supplier will be synchronized, confirm the update?
+merchant.content_resource.has_chosen: Choosed
+merchant.content_resource.editing: Editing
+merchant.content_resource.choose: Choose
+merchant.content_resource.no_supplier: No Supplier!
+merchant.content_resource.supplier.no_cooperation_hint: 与供应商%supplierName%之间商品合作关系已经取消，供应商的商品不能购买加入，但不影响已购学员学习，如需恢复，请联系供应商！
+
+
+admin_v2.course_manage.create_btn: Create Course
+admin_v2.course_manage.merchant_course: Purchase
+admin_v2.course_manage.has_version_change: Has Change
+
+exception.courseset.source_course_closed: Course closed,please contact the supplier.
+
+admin_v2.plumber.status: Status
+admin_v2.plumber.start: start
+admin_v2.plumber.stop: stop
+admin_v2.plumber.restart: restart
+
+admin_v2.plumber.job_id: ID
+admin_v2.plumber.job_time: Time
+admin_v2.plumber.job_worker: Worker Topic
+admin_v2.plumber.job_status: Status
+admin_v2.plumber.job_body: Body
+admin_v2.plumber.job_empty_hint: Empty
+
+exception.plumber.not_found_queue: Queue not founded
+
+s2b2c.product.cooperation_price: Cooperation Price
+s2b2c.product.suggestion_price: Suggestion Price
+
+s2b2c.course_product.free_tasks: Free tasks
+s2b2c.course_product.tag: Merchant course
+
+testpaper.result.unpassed: '很遗憾，您未通过本次考试'
+testpaper.result.passed: '恭喜您已通过本次考试!'
+testpaper.result.comment: '教师评语'
+homework.result.tips: '作业结果'
+
+#云监考
+course.task.enable_facein: 云监考
+admin.edu_cloud.edu_facein.basic_info: 基本信息
+
+admin.edu_cloud.edu_facein.service_suspend_tips: 您的云监考服务已被暂停，不能使用，请联系客服人员：4008041114。
+admin.edu_cloud.edu_facein.setting.title: 开启云监考
+admin.edu_cloud.edu_facein.setting.tips: >
+  开启云监考后，老师在创建考试课时的页面上会多一个“云监考”的开启选项，开启该选项后，学生一旦进入考试课时，监考系统就会自动启动。<a href="%url%" target="_blank">点击查看使用手册</a>
+admin.edu_cloud.edu_facein.detail.title: 采集详情
+admin.edu_cloud.edu_facein.list.status: 是否采集
+admin.edu_cloud.edu_facein.list.time: 采集时间
+admin.edu_cloud.edu_facein.list.empty: 暂无搜索结果
+admin.edu_cloud.edu_facein.no_enabled: 暂不支持该服务
+admin.edu_cloud.edu_facein.capture_link.title: 采集链接
+admin.edu_cloud.edu_facein.capture_link.tips1: '说明：1、对于同一个采集链接，一个用户只能采集一次；'
+admin.edu_cloud.edu_facein.capture_link.tips2: '2、重新生成采集链接后，旧链接会失效，不会影响之前采集成功的用户。'
+admin.edu_cloud.edu_facein.capture_link.tips3: '3、云监考功能暂不支持IE浏览器'
+facein.capture_face.title: 采集考生头像
+facein.capture_face.face_title: 摄像头画面
+facein.capture_face.face_title.tips: '请正脸对着摄像头，数秒后，系统将自动完成采集'
+facein.capture_face.img_title: 头像
+facein.capture_face.capture_btn: 采集头像
+facein.capture_face.capture_finish_btn: 完成采集
+facein.capture_face.inspection_result: 监考结果
+facein.capture_face.inspection_result.title: 疑似作弊考生
+facein.capture_face.inspection_data.title: 监考数据
+facein.capture_face.inspection_data.course_count: 计划人数
+facein.capture_face.inspection_data.result_count: 参加人数
+facein.capture_face.inspection_data.no_cheating_count: 无作弊人数
+facein.capture_face.inspection_data.inspection_count: 疑似作弊人数
+facein.capture_face.inspection_result_modal.title: 监考抓拍
+
+exception.s2b2c_product.update_type_invalid: Update type invalid
+exception.s2b2c_product.not_found: Product not found
+
+admin_v2.cloud_center.content_resource.product_update_setting: Update Setting
+admin_v2.cloud_center.content_resource.product_update_auto: Auto
+admin_v2.cloud_center.content_resource.product_update_manual: Manual
+
+
+admin_v2.cloud_center.content_resource.product_update_auto.tips: Update product automatically when product updated
+admin_v2.cloud_center.content_resource.product_update_manual.tips: Update product manually when product updated
+
+s2b2c.resource.all_choose: Choose All
+s2b2c.resource.return_market: Return
+s2b2c.resource.has_new_notice_hint: 您采购的内容有更新
+s2b2c.resource.no_fee_notice_hint: 您与%supplierName%合作的采购账户余额还剩%balance%，请及时联系%supplierName%进行充值
+s2b2c.resource.sync.prev_price.notify: 上个版本价格为
+s2b2c.resource.sync.has_new.notify: 有价格更新

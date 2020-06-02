@@ -198,7 +198,7 @@ class MobileController extends BaseController
     protected function getAppBannersSetting()
     {
         $banners = json_decode(
-            file_get_contents($this->container->get('request')->getSchemeAndHttpHost().'/mapi_v2/School/getSchoolBanner'),
+            file_get_contents($this->container->get('request_stack')->getMasterRequest()->getSchemeAndHttpHost().'/mapi_v2/School/getSchoolBanner'),
             true
         );
 
@@ -328,7 +328,7 @@ class MobileController extends BaseController
 
         $response = array(
             'path' => $mobile[$type],
-            'url' => $this->container->get('templating.helper.assets')->getUrl($mobile[$type]),
+            'url' => $this->container->get('assets.packages')->getUrl($mobile[$type]),
         );
 
         return new Response(json_encode($response));

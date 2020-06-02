@@ -12,7 +12,7 @@
 
 namespace PhpCsFixer;
 
-use Symfony\Component\EventDispatcher\Event;
+use PhpCsFixer\Event\Event;
 
 /**
  * Event that is fired when file was processed by Fixer.
@@ -37,11 +37,9 @@ final class FixerFileProcessedEvent extends Event
     const STATUS_LINT = 6;
 
     /**
-     * File status.
-     *
      * @var int
      */
-    private $status = self::STATUS_UNKNOWN;
+    private $status;
 
     /**
      * @param int $status
@@ -52,8 +50,6 @@ final class FixerFileProcessedEvent extends Event
     }
 
     /**
-     * Get status.
-     *
      * @return int
      */
     public function getStatus()

@@ -21,12 +21,15 @@ use PhpCsFixer\Tokenizer\Tokens as PhpTokens;
 use PhpCsFixer\Tokenizer\TokensAnalyzer;
 
 /**
- * Base class for Doctrine annotation fixers.
- *
  * @internal
  */
 abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements ConfigurationDefinitionFixerInterface
 {
+    /**
+     * @var array
+     */
+    private $classyElements;
+
     /**
      * {@inheritdoc}
      */
@@ -40,6 +43,10 @@ abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements 
      */
     protected function applyFix(\SplFileInfo $file, PhpTokens $phpTokens)
     {
+        // fetch indexes one time, this is safe as we never add or remove a token during fixing
+        $analyzer = new TokensAnalyzer($phpTokens);
+        $this->classyElements = $analyzer->getClassyElements();
+
         /** @var PhpToken $docCommentToken */
         foreach ($phpTokens->findGivenKind(T_DOC_COMMENT) as $index => $docCommentToken) {
             if (!$this->nextElementAcceptsDoctrineAnnotations($phpTokens, $index)) {
@@ -51,14 +58,12 @@ abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements 
                 $this->configuration['ignored_tags']
             );
             $this->fixAnnotations($tokens);
-            $docCommentToken->setContent($tokens->getCode());
+            $phpTokens[$index] = new PhpToken([T_DOC_COMMENT, $tokens->getCode()]);
         }
     }
 
     /**
      * Fixes Doctrine annotations from the given PHPDoc style comment.
-     *
-     * @param DoctrineAnnotationTokens $doctrineAnnotationTokens
      */
     abstract protected function fixAnnotations(DoctrineAnnotationTokens $doctrineAnnotationTokens);
 
@@ -67,132 +72,129 @@ abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements 
      */
     protected function createConfigurationDefinition()
     {
-        $ignoredTags = new FixerOptionBuilder('ignored_tags', 'List of tags that must not be treated as Doctrine Annotations.');
-        $ignoredTags = $ignoredTags
-            ->setAllowedTypes(array('array'))
-            ->setAllowedValues(array(function ($values) {
-                foreach ($values as $value) {
-                    if (!is_string($value)) {
-                        return false;
+        return new FixerConfigurationResolver([
+            (new FixerOptionBuilder('ignored_tags', 'List of tags that must not be treated as Doctrine Annotations.'))
+                ->setAllowedTypes(['array'])
+                ->setAllowedValues([static function ($values) {
+                    foreach ($values as $value) {
+                        if (!\is_string($value)) {
+                            return false;
+                        }
                     }
-                }
 
-                return true;
-            }))
-            ->setDefault(array(
-                 // PHPDocumentor 1
-                 'abstract',
-                 'access',
-                 'code',
-                 'deprec',
-                 'encode',
-                 'exception',
-                 'final',
-                 'ingroup',
-                 'inheritdoc',
-                 'inheritDoc',
-                 'magic',
-                 'name',
-                 'toc',
-                 'tutorial',
-                 'private',
-                 'static',
-                 'staticvar',
-                 'staticVar',
-                 'throw',
+                    return true;
+                }])
+                ->setDefault([
+                    // PHPDocumentor 1
+                    'abstract',
+                    'access',
+                    'code',
+                    'deprec',
+                    'encode',
+                    'exception',
+                    'final',
+                    'ingroup',
+                    'inheritdoc',
+                    'inheritDoc',
+                    'magic',
+                    'name',
+                    'toc',
+                    'tutorial',
+                    'private',
+                    'static',
+                    'staticvar',
+                    'staticVar',
+                    'throw',
 
-                 // PHPDocumentor 2
-                 'api',
-                 'author',
-                 'category',
-                 'copyright',
-                 'deprecated',
-                 'example',
-                 'filesource',
-                 'global',
-                 'ignore',
-                 'internal',
-                 'license',
-                 'link',
-                 'method',
-                 'package',
-                 'param',
-                 'property',
-                 'property-read',
-                 'property-write',
-                 'return',
-                 'see',
-                 'since',
-                 'source',
-                 'subpackage',
-                 'throws',
-                 'todo',
-                 'TODO',
-                 'usedBy',
-                 'uses',
-                 'var',
-                 'version',
+                    // PHPDocumentor 2
+                    'api',
+                    'author',
+                    'category',
+                    'copyright',
+                    'deprecated',
+                    'example',
+                    'filesource',
+                    'global',
+                    'ignore',
+                    'internal',
+                    'license',
+                    'link',
+                    'method',
+                    'package',
+                    'param',
+                    'property',
+                    'property-read',
+                    'property-write',
+                    'return',
+                    'see',
+                    'since',
+                    'source',
+                    'subpackage',
+                    'throws',
+                    'todo',
+                    'TODO',
+                    'usedBy',
+                    'uses',
+                    'var',
+                    'version',
 
-                 // PHPUnit
-                 'after',
-                 'afterClass',
-                 'backupGlobals',
-                 'backupStaticAttributes',
-                 'before',
-                 'beforeClass',
-                 'codeCoverageIgnore',
-                 'codeCoverageIgnoreStart',
-                 'codeCoverageIgnoreEnd',
-                 'covers',
-                 'coversDefaultClass',
-                 'coversNothing',
-                 'dataProvider',
-                 'depends',
-                 'expectedException',
-                 'expectedExceptionCode',
-                 'expectedExceptionMessage',
-                 'expectedExceptionMessageRegExp',
-                 'group',
-                 'large',
-                 'medium',
-                 'preserveGlobalState',
-                 'requires',
-                 'runTestsInSeparateProcesses',
-                 'runInSeparateProcess',
-                 'small',
-                 'test',
-                 'testdox',
-                 'ticket',
-                 'uses',
+                    // PHPUnit
+                    'after',
+                    'afterClass',
+                    'backupGlobals',
+                    'backupStaticAttributes',
+                    'before',
+                    'beforeClass',
+                    'codeCoverageIgnore',
+                    'codeCoverageIgnoreStart',
+                    'codeCoverageIgnoreEnd',
+                    'covers',
+                    'coversDefaultClass',
+                    'coversNothing',
+                    'dataProvider',
+                    'depends',
+                    'expectedException',
+                    'expectedExceptionCode',
+                    'expectedExceptionMessage',
+                    'expectedExceptionMessageRegExp',
+                    'group',
+                    'large',
+                    'medium',
+                    'preserveGlobalState',
+                    'requires',
+                    'runTestsInSeparateProcesses',
+                    'runInSeparateProcess',
+                    'small',
+                    'test',
+                    'testdox',
+                    'ticket',
+                    'uses',
 
-                 // PHPCheckStyle
-                 'SuppressWarnings',
+                    // PHPCheckStyle
+                    'SuppressWarnings',
 
-                 // PHPStorm
-                 'noinspection',
+                    // PHPStorm
+                    'noinspection',
 
-                 // PEAR
-                 'package_version',
+                    // PEAR
+                    'package_version',
 
-                 // PlantUML
-                 'enduml',
-                 'startuml',
+                    // PlantUML
+                    'enduml',
+                    'startuml',
 
-                 // other
-                 'fix',
-                 'FIXME',
-                 'fixme',
-                 'override',
-            ))
-            ->getOption()
-        ;
-
-        return new FixerConfigurationResolver(array($ignoredTags));
+                    // other
+                    'fix',
+                    'FIXME',
+                    'fixme',
+                    'override',
+                ])
+                ->getOption(),
+        ]);
     }
 
     /**
-     * @param PhpTokens $tokens
-     * @param int       $index
+     * @param int $index
      *
      * @return bool
      */
@@ -200,18 +202,20 @@ abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements 
     {
         do {
             $index = $tokens->getNextMeaningfulToken($index);
-        } while ($tokens[$index]->isGivenKind(array(T_ABSTRACT, T_FINAL)));
+
+            if (null === $index) {
+                return false;
+            }
+        } while ($tokens[$index]->isGivenKind([T_ABSTRACT, T_FINAL]));
 
         if ($tokens[$index]->isClassy()) {
             return true;
         }
 
-        while ($tokens[$index]->isGivenKind(array(T_PUBLIC, T_PROTECTED, T_PRIVATE, T_FINAL, T_ABSTRACT))) {
+        while ($tokens[$index]->isGivenKind([T_PUBLIC, T_PROTECTED, T_PRIVATE, T_FINAL, T_ABSTRACT])) {
             $index = $tokens->getNextMeaningfulToken($index);
         }
 
-        $analyzer = new TokensAnalyzer($tokens);
-
-        return array_key_exists($index, $analyzer->getClassyElements());
+        return isset($this->classyElements[$index]);
     }
 }

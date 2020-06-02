@@ -22,22 +22,22 @@ final class ReportSummary
     /**
      * @var bool
      */
-    private $addAppliedFixers = false;
+    private $addAppliedFixers;
 
     /**
      * @var array
      */
-    private $changed = array();
+    private $changed;
 
     /**
      * @var bool
      */
-    private $isDecoratedOutput = false;
+    private $isDecoratedOutput;
 
     /**
      * @var bool
      */
-    private $isDryRun = false;
+    private $isDryRun;
 
     /**
      * @var int
@@ -50,12 +50,11 @@ final class ReportSummary
     private $time;
 
     /**
-     * @param array $changed
-     * @param int   $time              duration in milliseconds
-     * @param int   $memory            memory usage in bytes
-     * @param bool  $addAppliedFixers
-     * @param bool  $isDryRun
-     * @param bool  $isDecoratedOutput
+     * @param int  $time              duration in milliseconds
+     * @param int  $memory            memory usage in bytes
+     * @param bool $addAppliedFixers
+     * @param bool $isDryRun
+     * @param bool $isDecoratedOutput
      */
     public function __construct(
         array $changed,

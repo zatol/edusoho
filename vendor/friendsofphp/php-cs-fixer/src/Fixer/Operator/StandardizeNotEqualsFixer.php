@@ -15,6 +15,7 @@ namespace PhpCsFixer\Fixer\Operator;
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -29,8 +30,18 @@ final class StandardizeNotEqualsFixer extends AbstractFixer
     {
         return new FixerDefinition(
             'Replace all `<>` with `!=`.',
-            array(new CodeSample("<?php\n\$a = \$b <> \$c;"))
+            [new CodeSample("<?php\n\$a = \$b <> \$c;\n")]
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Must run before BinaryOperatorSpacesFixer.
+     */
+    public function getPriority()
+    {
+        return 0;
     }
 
     /**
@@ -48,7 +59,7 @@ final class StandardizeNotEqualsFixer extends AbstractFixer
     {
         foreach ($tokens as $index => $token) {
             if ($token->isGivenKind(T_IS_NOT_EQUAL)) {
-                $tokens[$index]->setContent('!=');
+                $tokens[$index] = new Token([T_IS_NOT_EQUAL, '!=']);
             }
         }
     }

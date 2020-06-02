@@ -15,8 +15,6 @@ namespace PhpCsFixer\Tokenizer;
 use PhpCsFixer\Utils;
 
 /**
- * Abstract base for Transformer class.
- *
  * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
  *
  * @internal
@@ -28,8 +26,8 @@ abstract class AbstractTransformer implements TransformerInterface
      */
     public function getName()
     {
-        $nameParts = explode('\\', get_called_class());
-        $name = substr(end($nameParts), 0, -strlen('Transformer'));
+        $nameParts = explode('\\', static::class);
+        $name = substr(end($nameParts), 0, -\strlen('Transformer'));
 
         return Utils::camelCaseToUnderscore($name);
     }

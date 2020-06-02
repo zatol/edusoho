@@ -50,6 +50,7 @@ site.capacity: 容量(G)
 site.step_two: 步骤2
 site.step_one: 步骤1
 site.information: 信息
+site.tips: 提示
 site.unknow_server_error: 发生未知错误
 
 site.incorrect.password: 密码错误
@@ -405,6 +406,7 @@ course_manage.student_remark_success_hint: 备注%username%成功
 course_manage.student_remark_failed_hint: 备注%username%失败，请重试！
 
 course_manage.student_create.field_required_error_hint: 请输入学员邮箱/手机号/用户名
+course_manage.student_create.price_min_error_hint: 采购的课程购买价格不能为0!
 course_manage.student_create.price_max_error_hint: 购买价格不能大于课程原价!
 
 course_set.show.count_down_format_hint: 剩余 <span>%D</span>天 <span>%H</span>时 <span>%M</span>分 <span>%S</span>秒
@@ -487,15 +489,19 @@ course.manage.live_replay_generate_error: 未开启直播回放或视频正在�
 course.manage.live_replay_upload_error_hint: 请上传录像文件
 course.manage.buy_expiry_time_required_error_hint: 请输入加入截止日期
 course.manage.buy_expiry_time_error_hint: 请选择有效的加入截止日期
-course.manage.student_delete_hint: 是否确定删除该学员？
+course.manage.student_delete_hint: 是否确定移除该学员？
+course.manage.students_delete_hint: 是否移除这些学员？
 course.manage.min_teacher_num_error_hint: 教学计划至少需要一位教师
 course.manage.teacher_display_label: 显示
 course.manage.sort_cancel: 取消当前排序
 course.manage.student.add_expiry_day.select_tips: 请至少选中一项后进行修改
+course.manage.student.batch_remove.select_tips: 请至少选中一项后移除
 course.manage.reward_point_required_hint: 请输入教学计划奖励积分
 course.manage.task_reward_point_required_hint: 请输入计划任务奖励积分
 course.manage.max_point_error_hint: 请输入0-100000的整数
 course.manage.student_expiry_day_hint: 只有按天数设置的学习有效期，才可手动增加有效期。
+member.delete_success_hint: 移除成功
+member.delete_fail_hint: 移除失败
 
 material_lib.content_title: 教学资料库
 material_lib.detail.content_title: 资源详情
@@ -563,6 +569,7 @@ classroom.manage.expiry_mode_date_error_hint: 请输入截至日期
 classroom.manage.coin_price_hint: 相当于%coinPrice%%coinName%
 classroom.live_room.entry_error_hint: 进入直播教室错误，请联系管理员，<a href="javascript:document.location.reload()">重试</a>或<a href="javascript:window.close();">关闭</a>
 classroom.live_room.retry_or_close: <a href="javascript:document.location.reload()">重试</a>或<a href="javascript:window.close();">关闭</a>
+classroom.manage.admin_delete_course_set_hint: 同时删除此班级课程（不会影响源课程以及其他班级）
 
 thread.post.reply: 回复
 thread.post.reply_error_hint: 发表回复失败，请重试
@@ -1186,6 +1193,7 @@ admin.setting.cloud.delete_cloud_video_embed_watermark_hint: 确认要删除云�
 admin.setting.cloud.delete_cloud_video_embed_watermark_success_hint: 删除云视频内嵌水印成功！
 admin.setting.cloud.delete_cloud_video_embed_watermark_fail_hint: 删除云视频内嵌水印失败！
 admin.setting.cloud.validate_old.video_fingerprint_time.display: 云视频指纹显示时间
+admin.setting.cloud.validate_old.video_fingerprint_opacity.display: 云视频指纹不透明度
 admin.setting.consult_setting.upload_qrcode_success_hint: 上传微信二维码成功！
 admin.setting.consult_setting.setting_max_num_hint: 最多设置10个..
 admin.setting.consult_setting.delete_hint: 确认要删除吗？
@@ -1431,6 +1439,7 @@ coupon.target_type.multi_course: 部分课程
 coupon.target_type.multi_classroom: 部分班级
 admin.wechat.live_open_scenes_error.hint: 请至少勾选一个选项。
 course.question_manage.manage.delete_tips: 删除题目，可能会影响课时的练习，请谨慎操作！
+course.question_manage.upgrade_tips: 为了更好的使用体验，请先升级插件。<br />路径：【后台】 - 【云市场】- 【营销应用】 - 【题库增强插件】。
 admin.setting.invite.coupon.empty.tips: 请设置优惠券批次
 
 course.plan_task.activity_ppt_animation_img: 切换图片模式
@@ -1476,3 +1485,15 @@ course_manage.live_statistics.empty_tips: 数据同步中，请稍后重试
 course_manage.live_statistics.live_not_end: 直播数据未生成
 course_manage.live_statistics.checkin_not_support: 当前直播课暂不支持点名功能
 course_manage.live_statistics.data_not_valid: 数据异常，直播间数据返回错误
+
+admin_v2.user.nickname_modify_success_hint: 用户名修改成功
+admin_v2.user.nickname_modify_error_hint: 操作失败
+
+admin_v2.developer.plumber_operate_hint: 正在操作中，可能需要一段时间，请稍后……
+admin_v2.developer.plumber_operate_error_hint: 操作失败
+admin_v2.developer.plumber_operate_success_hint: 操作成功
+
+course_manage.positive_currency.message: 请输入大于0的有效价格，最多两位小数，整数位不超过8位！
+
+merchant.resource.product_version.update_success_hint: 更新成功
+merchant.resource.product_version.update_failed_hint: 更新失败

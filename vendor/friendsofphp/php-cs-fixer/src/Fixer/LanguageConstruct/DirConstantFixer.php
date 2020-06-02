@@ -30,9 +30,9 @@ final class DirConstantFixer extends AbstractFunctionReferenceFixer
     {
         return new FixerDefinition(
             'Replaces `dirname(__FILE__)` expression with equivalent `__DIR__` constant.',
-            array(new CodeSample("<?php\n\$a = dirname(__FILE__);")),
+            [new CodeSample("<?php\n\$a = dirname(__FILE__);\n")],
             null,
-            'Risky when the function `dirname()` is overridden.'
+            'Risky when the function `dirname` is overridden.'
         );
     }
 
@@ -42,6 +42,16 @@ final class DirConstantFixer extends AbstractFunctionReferenceFixer
     public function isCandidate(Tokens $tokens)
     {
         return $tokens->isTokenKindFound(T_FILE);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Must run before CombineNestedDirnameFixer.
+     */
+    public function getPriority()
+    {
+        return 4;
     }
 
     /**
@@ -61,12 +71,24 @@ final class DirConstantFixer extends AbstractFunctionReferenceFixer
             // analysing cursor shift, so nested expressions kept processed
             $currIndex = $openParenthesis;
 
-            /* ensure __FILE__ is in between (...) */
+            // ensure __FILE__ is in between (...)
+
             $fileCandidateRightIndex = $tokens->getPrevMeaningfulToken($closeParenthesis);
+            $trailingCommaIndex = null;
+            if ($tokens[$fileCandidateRightIndex]->equals(',')) {
+                $trailingCommaIndex = $fileCandidateRightIndex;
+                $fileCandidateRightIndex = $tokens->getPrevMeaningfulToken($fileCandidateRightIndex);
+            }
+
             $fileCandidateRight = $tokens[$fileCandidateRightIndex];
+            if (!$fileCandidateRight->isGivenKind(T_FILE)) {
+                continue;
+            }
+
             $fileCandidateLeftIndex = $tokens->getNextMeaningfulToken($openParenthesis);
             $fileCandidateLeft = $tokens[$fileCandidateLeftIndex];
-            if (!$fileCandidateRight->isGivenKind(array(T_FILE)) || !$fileCandidateLeft->isGivenKind(array(T_FILE))) {
+
+            if (!$fileCandidateLeft->isGivenKind(T_FILE)) {
                 continue;
             }
 
@@ -75,7 +97,15 @@ final class DirConstantFixer extends AbstractFunctionReferenceFixer
             $namespaceCandidate = $tokens[$namespaceCandidateIndex];
             if ($namespaceCandidate->isGivenKind(T_NS_SEPARATOR)) {
                 $tokens->removeTrailingWhitespace($namespaceCandidateIndex);
-                $namespaceCandidate->clear();
+                $tokens->clearAt($namespaceCandidateIndex);
+            }
+
+            if (null !== $trailingCommaIndex) {
+                if (!$tokens[$tokens->getNextNonWhitespace($trailingCommaIndex)]->isComment()) {
+                    $tokens->removeTrailingWhitespace($trailingCommaIndex);
+                }
+
+                $tokens->clearTokenAndMergeSurroundingWhitespace($trailingCommaIndex);
             }
 
             // closing parenthesis removed with leading spaces
@@ -83,7 +113,7 @@ final class DirConstantFixer extends AbstractFunctionReferenceFixer
                 $tokens->removeLeadingWhitespace($closeParenthesis);
             }
 
-            $tokens[$closeParenthesis]->clear();
+            $tokens->clearTokenAndMergeSurroundingWhitespace($closeParenthesis);
 
             // opening parenthesis removed with trailing and leading spaces
             if (!$tokens[$tokens->getNextNonWhitespace($openParenthesis)]->isComment()) {
@@ -91,11 +121,11 @@ final class DirConstantFixer extends AbstractFunctionReferenceFixer
             }
 
             $tokens->removeTrailingWhitespace($openParenthesis);
-            $tokens[$openParenthesis]->clear();
+            $tokens->clearTokenAndMergeSurroundingWhitespace($openParenthesis);
 
             // replace constant and remove function name
-            $tokens->overrideAt($fileCandidateLeftIndex, new Token(array(T_DIR, '__DIR__')));
-            $tokens[$functionNameIndex]->clear();
+            $tokens[$fileCandidateLeftIndex] = new Token([T_DIR, '__DIR__']);
+            $tokens->clearTokenAndMergeSurroundingWhitespace($functionNameIndex);
         }
     }
 }

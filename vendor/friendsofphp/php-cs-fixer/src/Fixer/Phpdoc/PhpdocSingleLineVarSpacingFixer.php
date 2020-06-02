@@ -15,6 +15,7 @@ namespace PhpCsFixer\Fixer\Phpdoc;
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Preg;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
@@ -31,17 +32,19 @@ final class PhpdocSingleLineVarSpacingFixer extends AbstractFixer
     public function getDefinition()
     {
         return new FixerDefinition(
-            'Single line @var PHPDoc should have proper spacing.',
-            array(new CodeSample("<?php /**@var   MyClass   \$a   */\n\$a = test();"))
+            'Single line `@var` PHPDoc should have proper spacing.',
+            [new CodeSample("<?php /**@var   MyClass   \$a   */\n\$a = test();\n")]
         );
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before PhpdocAlignFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocNoAliasTagFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
      */
     public function getPriority()
     {
-        // should be ran after PhpdocNoAliasTagFixer.
         return -10;
     }
 
@@ -50,7 +53,7 @@ final class PhpdocSingleLineVarSpacingFixer extends AbstractFixer
      */
     public function isCandidate(Tokens $tokens)
     {
-        return $tokens->isAnyTokenKindsFound(array(T_COMMENT, T_DOC_COMMENT));
+        return $tokens->isAnyTokenKindsFound([T_COMMENT, T_DOC_COMMENT]);
     }
 
     /**
@@ -61,7 +64,8 @@ final class PhpdocSingleLineVarSpacingFixer extends AbstractFixer
         /** @var Token $token */
         foreach ($tokens as $index => $token) {
             if ($token->isGivenKind(T_DOC_COMMENT)) {
-                $token->setContent($this->fixTokenContent($token->getContent()));
+                $tokens[$index] = new Token([T_DOC_COMMENT, $this->fixTokenContent($token->getContent())]);
+
                 continue;
             }
 
@@ -72,7 +76,7 @@ final class PhpdocSingleLineVarSpacingFixer extends AbstractFixer
             $content = $token->getContent();
             $fixedContent = $this->fixTokenContent($content);
             if ($content !== $fixedContent) {
-                $tokens->overrideAt($index, array(T_DOC_COMMENT, $fixedContent));
+                $tokens[$index] = new Token([T_DOC_COMMENT, $fixedContent]);
             }
         }
     }
@@ -84,11 +88,11 @@ final class PhpdocSingleLineVarSpacingFixer extends AbstractFixer
      */
     private function fixTokenContent($content)
     {
-        return preg_replace_callback(
-            '#^/\*\*[ \t]*@var[ \t]+(\S+)[ \t]*(\$\S+)?[ \t]*([^\n]*)\*/$#',
-            function (array $matches) {
+        return Preg::replaceCallback(
+            '#^/\*\*\h*@var\h+(\S+)\h*(\$\S+)?\h*([^\n]*)\*/$#',
+            static function (array $matches) {
                 $content = '/** @var';
-                for ($i = 1, $m = count($matches); $i < $m; ++$i) {
+                for ($i = 1, $m = \count($matches); $i < $m; ++$i) {
                     if ('' !== $matches[$i]) {
                         $content .= ' '.$matches[$i];
                     }

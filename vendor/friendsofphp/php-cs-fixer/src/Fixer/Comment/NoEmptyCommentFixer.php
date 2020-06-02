@@ -15,6 +15,7 @@ namespace PhpCsFixer\Fixer\Comment;
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Preg;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -28,10 +29,12 @@ final class NoEmptyCommentFixer extends AbstractFixer
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before NoExtraBlankLinesFixer, NoTrailingWhitespaceFixer, NoWhitespaceInBlankLineFixer.
+     * Must run after PhpdocToCommentFixer.
      */
     public function getPriority()
     {
-        // should be run after PhpdocToCommentFixer and before NoExtraConsecutiveBlankLinesFixer, NoTrailingWhitespaceFixer and NoWhitespaceInBlankLineFixer.
         return 2;
     }
 
@@ -42,7 +45,7 @@ final class NoEmptyCommentFixer extends AbstractFixer
     {
         return new FixerDefinition(
             'There should not be any empty comments.',
-            array(new CodeSample("<?php\n//\n#\n/* */\n"))
+            [new CodeSample("<?php\n//\n#\n/* */\n")]
         );
     }
 
@@ -59,7 +62,7 @@ final class NoEmptyCommentFixer extends AbstractFixer
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
-        for ($index = 1, $count = count($tokens); $index < $count; ++$index) {
+        for ($index = 1, $count = \count($tokens); $index < $count; ++$index) {
             if (!$tokens[$index]->isGivenKind(T_COMMENT)) {
                 continue;
             }
@@ -78,8 +81,7 @@ final class NoEmptyCommentFixer extends AbstractFixer
     /**
      * Return the start index, end index and a flag stating if the comment block is empty.
      *
-     * @param Tokens $tokens
-     * @param int    $index  T_COMMENT index
+     * @param int $index T_COMMENT index
      *
      * @return array
      */
@@ -88,7 +90,7 @@ final class NoEmptyCommentFixer extends AbstractFixer
         $commentType = $this->getCommentType($tokens[$index]->getContent());
         $empty = $this->isEmptyComment($tokens[$index]->getContent());
         $start = $index;
-        $count = count($tokens);
+        $count = \count($tokens);
         ++$index;
 
         for (; $index < $count; ++$index) {
@@ -109,7 +111,7 @@ final class NoEmptyCommentFixer extends AbstractFixer
             }
         }
 
-        return array($start, $index - 1, $empty);
+        return [$start, $index - 1, $empty];
     }
 
     /**
@@ -131,9 +133,8 @@ final class NoEmptyCommentFixer extends AbstractFixer
     }
 
     /**
-     * @param Tokens $tokens
-     * @param int    $whiteStart
-     * @param int    $whiteEnd
+     * @param int $whiteStart
+     * @param int $whiteEnd
      *
      * @return int
      */
@@ -141,7 +142,7 @@ final class NoEmptyCommentFixer extends AbstractFixer
     {
         $lineCount = 0;
         for ($i = $whiteStart; $i < $whiteEnd; ++$i) {
-            $lineCount += substr_count($tokens[$i]->getContent(), "\n");
+            $lineCount += Preg::matchAll('/\R/u', $tokens[$i]->getContent(), $matches);
         }
 
         return $lineCount;
@@ -154,17 +155,14 @@ final class NoEmptyCommentFixer extends AbstractFixer
      */
     private function isEmptyComment($content)
     {
+        static $mapper = [
+            self::TYPE_HASH => '|^#\s*$|', // single line comment starting with '#'
+            self::TYPE_SLASH_ASTERISK => '|^/\*\s*\*/$|', // comment starting with '/*' and ending with '*/' (but not a PHPDoc)
+            self::TYPE_DOUBLE_SLASH => '|^//\s*$|', // single line comment starting with '//'
+        ];
+
         $type = $this->getCommentType($content);
-        switch ($type) {
-            case self::TYPE_HASH:
-                // single line comment starting with '#'
-                return 1 === preg_match('|^#\s*$|', $content);
-            case self::TYPE_SLASH_ASTERISK:
-                // comment starting with '/*' and ending with '*/' (but not a PHPDoc)
-                return 1 === preg_match('|^/\*\s*\*/$|', $content);
-            case self::TYPE_DOUBLE_SLASH:
-                // single line comment starting with '//'
-                return 1 === preg_match('|^//\s*$|', $content);
-        }
+
+        return 1 === Preg::match($mapper[$type], $content);
     }
 }

@@ -1,6 +1,6 @@
 import 'jquery-validation';
 import { isEmpty } from 'common/utils';
-import axis from 'common/axis';
+import  { axis } from 'common/axis';
 
 $.validator.setDefaults({
   errorClass: 'form-error-message jq-validate-error',
@@ -312,7 +312,7 @@ $.validator.addMethod('qq', function(value, element) {
 }, Translator.trans('validate.valid_qq_input.message'));
 
 $.validator.addMethod('weixin', function(value, element) {
-  return this.optional(element) || /^[a-zA-Z]{1}[-_a-zA-Z0-9]{5,19}$/.test(value);
+  return this.optional(element) || /^[-_a-zA-Z0-9]{6,20}$/.test(value);
 }, Translator.trans('validate.valid_weixin_input.message'));
 
 $.validator.addMethod('mobile', function(value, element) {

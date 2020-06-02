@@ -13,9 +13,10 @@
 namespace PhpCsFixer\Runner;
 
 use PhpCsFixer\Cache\CacheManagerInterface;
+use PhpCsFixer\Event\Event;
+use PhpCsFixer\FileReader;
 use PhpCsFixer\FixerFileProcessedEvent;
-use Symfony\Component\EventDispatcher\Event;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
@@ -25,7 +26,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 final class FileFilterIterator extends \FilterIterator
 {
     /**
-     * @var EventDispatcher|null
+     * @var null|EventDispatcherInterface
      */
     private $eventDispatcher;
 
@@ -37,13 +38,17 @@ final class FileFilterIterator extends \FilterIterator
     /**
      * @var array<string,bool>
      */
-    private $visitedElements = array();
+    private $visitedElements = [];
 
     public function __construct(
-        \Iterator $iterator,
-        EventDispatcher $eventDispatcher = null,
+        \Traversable $iterator,
+        EventDispatcherInterface $eventDispatcher = null,
         CacheManagerInterface $cacheManager
     ) {
+        if (!$iterator instanceof \Iterator) {
+            $iterator = new \IteratorIterator($iterator);
+        }
+
         parent::__construct($iterator);
 
         $this->eventDispatcher = $eventDispatcher;
@@ -53,7 +58,16 @@ final class FileFilterIterator extends \FilterIterator
     public function accept()
     {
         $file = $this->current();
-        $path = $file->getRealPath();
+        if (!$file instanceof \SplFileInfo) {
+            throw new \RuntimeException(
+                sprintf(
+                    'Expected instance of "\SplFileInfo", got "%s".',
+                    \is_object($file) ? \get_class($file) : \gettype($file)
+                )
+            );
+        }
+
+        $path = $file->isLink() ? $file->getPathname() : $file->getRealPath();
 
         if (isset($this->visitedElements[$path])) {
             return false;
@@ -61,18 +75,16 @@ final class FileFilterIterator extends \FilterIterator
 
         $this->visitedElements[$path] = true;
 
-        if ($file->isDir() || $file->isLink()) {
+        if (!$file->isFile() || $file->isLink()) {
             return false;
         }
 
-        $content = file_get_contents($path);
+        $content = FileReader::createSingleton()->read($path);
 
         // mark as skipped:
         if (
             // empty file
             '' === $content
-            // file uses __halt_compiler() on ~5.3.6 due to broken implementation of token_get_all
-            || (PHP_VERSION_ID >= 50306 && PHP_VERSION_ID < 50400 && false !== stripos($content, '__halt_compiler()'))
             // file that does not need fixing due to cache
             || !$this->cacheManager->needFixing($file->getPathname(), $content)
         ) {
@@ -88,10 +100,7 @@ final class FileFilterIterator extends \FilterIterator
     }
 
     /**
-     * Dispatch event.
-     *
      * @param string $name
-     * @param Event  $event
      */
     private function dispatchEvent($name, Event $event)
     {
@@ -99,6 +108,15 @@ final class FileFilterIterator extends \FilterIterator
             return;
         }
 
-        $this->eventDispatcher->dispatch($name, $event);
+        // BC compatibility < Sf 4.3
+        if (
+            !$this->eventDispatcher instanceof \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+        ) {
+            $this->eventDispatcher->dispatch($name, $event);
+
+            return;
+        }
+
+        $this->eventDispatcher->dispatch($event, $name);
     }
 }

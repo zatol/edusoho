@@ -375,6 +375,7 @@ userInfoFields:
     weixin: Wechat
 
 passedStatus:
+    none: -
     excellent: Excellent
     good: Good
     passed: Passed
@@ -490,3 +491,7 @@ weekDays:
 adminCourseTypes:
     normal: Course
     classroom: Classroom course
+
+adminPlumberStatus:
+    executing: Excuting
+    stopped: Stopped

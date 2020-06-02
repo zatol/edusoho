@@ -15,6 +15,7 @@ namespace PhpCsFixer\Fixer\CastNotation;
 use PhpCsFixer\AbstractFunctionReferenceFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
+use PhpCsFixer\Tokenizer\Analyzer\ArgumentsAnalyzer;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
@@ -30,15 +31,17 @@ final class ModernizeTypesCastingFixer extends AbstractFunctionReferenceFixer
     {
         return new FixerDefinition(
             'Replaces `intval`, `floatval`, `doubleval`, `strval` and `boolval` function calls with according type casting operator.',
-            array(new CodeSample(
-'<?php
+            [
+                new CodeSample(
+                    '<?php
     $a = intval($b);
     $a = floatval($b);
     $a = doubleval($b);
     $a = strval ($b);
     $a = boolval($b);
-'),
-            ),
+'
+                ),
+            ],
             null,
             'Risky if any of the functions `intval`, `floatval`, `doubleval`, `strval` or `boolval` are overridden.'
         );
@@ -58,13 +61,15 @@ final class ModernizeTypesCastingFixer extends AbstractFunctionReferenceFixer
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
         // replacement patterns
-        static $replacement = array(
-             'intval' => array(T_INT_CAST, '(int)'),
-             'floatval' => array(T_DOUBLE_CAST, '(float)'),
-             'doubleval' => array(T_DOUBLE_CAST, '(float)'),
-             'strval' => array(T_STRING_CAST, '(string)'),
-             'boolval' => array(T_BOOL_CAST, '(bool)'),
-        );
+        static $replacement = [
+            'intval' => [T_INT_CAST, '(int)'],
+            'floatval' => [T_DOUBLE_CAST, '(float)'],
+            'doubleval' => [T_DOUBLE_CAST, '(float)'],
+            'strval' => [T_STRING_CAST, '(string)'],
+            'boolval' => [T_BOOL_CAST, '(bool)'],
+        ];
+
+        $argumentsAnalyzer = new ArgumentsAnalyzer();
 
         foreach ($replacement as $functionIdentity => $newToken) {
             $currIndex = 0;
@@ -81,14 +86,22 @@ final class ModernizeTypesCastingFixer extends AbstractFunctionReferenceFixer
                 // analysing cursor shift
                 $currIndex = $openParenthesis;
 
-                // indicator that the function is overriden
-                if (1 !== $this->countArguments($tokens, $openParenthesis, $closeParenthesis)) {
+                // indicator that the function is overridden
+                if (1 !== $argumentsAnalyzer->countArguments($tokens, $openParenthesis, $closeParenthesis)) {
                     continue;
+                }
+
+                $paramContentEnd = $closeParenthesis;
+                $commaCandidate = $tokens->getPrevMeaningfulToken($paramContentEnd);
+                if ($tokens[$commaCandidate]->equals(',')) {
+                    $tokens->removeTrailingWhitespace($commaCandidate);
+                    $tokens->clearAt($commaCandidate);
+                    $paramContentEnd = $commaCandidate;
                 }
 
                 // check if something complex passed as an argument and preserve parenthesises then
                 $countParamTokens = 0;
-                for ($paramContentIndex = $openParenthesis + 1; $paramContentIndex < $closeParenthesis; ++$paramContentIndex) {
+                for ($paramContentIndex = $openParenthesis + 1; $paramContentIndex < $paramContentEnd; ++$paramContentIndex) {
                     //not a space, means some sensible token
                     if (!$tokens[$paramContentIndex]->isGivenKind(T_WHITESPACE)) {
                         ++$countParamTokens;
@@ -97,32 +110,43 @@ final class ModernizeTypesCastingFixer extends AbstractFunctionReferenceFixer
 
                 $preserveParenthesises = $countParamTokens > 1;
 
+                $afterCloseParenthesisIndex = $tokens->getNextMeaningfulToken($closeParenthesis);
+                $afterCloseParenthesisToken = $tokens[$afterCloseParenthesisIndex];
+                $wrapInParenthesises = $afterCloseParenthesisToken->equalsAny(['[', '{']) || $afterCloseParenthesisToken->isGivenKind(T_POW);
+
                 // analyse namespace specification (root one or none) and decide what to do
                 $prevTokenIndex = $tokens->getPrevMeaningfulToken($functionName);
                 if ($tokens[$prevTokenIndex]->isGivenKind(T_NS_SEPARATOR)) {
                     // get rid of root namespace when it used
                     $tokens->removeTrailingWhitespace($prevTokenIndex);
-                    $tokens[$prevTokenIndex]->clear();
+                    $tokens->clearAt($prevTokenIndex);
                 }
 
                 // perform transformation
-                $replacementSequence = array(
+                $replacementSequence = [
                     new Token($newToken),
-                    new Token(array(T_WHITESPACE, ' ')),
-                );
+                    new Token([T_WHITESPACE, ' ']),
+                ];
+                if ($wrapInParenthesises) {
+                    array_unshift($replacementSequence, new Token('('));
+                }
 
                 if (!$preserveParenthesises) {
                     // closing parenthesis removed with leading spaces
                     $tokens->removeLeadingWhitespace($closeParenthesis);
-                    $tokens[$closeParenthesis]->clear();
+                    $tokens->clearAt($closeParenthesis);
 
                     // opening parenthesis removed with trailing spaces
                     $tokens->removeLeadingWhitespace($openParenthesis);
                     $tokens->removeTrailingWhitespace($openParenthesis);
-                    $tokens[$openParenthesis]->clear();
+                    $tokens->clearAt($openParenthesis);
                 } else {
                     // we'll need to provide a space after a casting operator
                     $tokens->removeTrailingWhitespace($functionName);
+                }
+
+                if ($wrapInParenthesises) {
+                    $tokens->insertAt($closeParenthesis, new Token(')'));
                 }
 
                 $tokens->overrideRange($functionName, $functionName, $replacementSequence);

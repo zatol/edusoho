@@ -2,13 +2,16 @@
 
 namespace AppBundle\Controller\Activity;
 
-use Biz\Course\Service\CourseService;
-use Biz\Activity\Service\ActivityService;
-use Biz\Testpaper\Service\TestpaperService;
-use Symfony\Component\HttpFoundation\Request;
-use Biz\Activity\Service\TestpaperActivityService;
-use AppBundle\Common\Paginator;
 use AppBundle\Common\ArrayToolkit;
+use AppBundle\Common\Paginator;
+use Biz\Activity\Service\ActivityService;
+use Biz\Activity\Service\TestpaperActivityService;
+use Biz\Course\Service\CourseService;
+use Biz\Testpaper\Service\TestpaperService;
+use Codeages\Biz\ItemBank\Answer\Service\AnswerRecordService;
+use Codeages\Biz\ItemBank\Answer\Service\AnswerReportService;
+use Codeages\Biz\ItemBank\Assessment\Service\AssessmentService;
+use Symfony\Component\HttpFoundation\Request;
 
 class TestpaperController extends BaseActivityController implements ActivityActionInterface
 {
@@ -23,31 +26,31 @@ class TestpaperController extends BaseActivityController implements ActivityActi
         $testpaper = $this->getTestpaperService()->getTestpaperByIdAndType($testpaperActivity['mediaId'], $activity['mediaType']);
 
         if (!$testpaper) {
-            return $this->render('activity/testpaper/preview.html.twig', array(
+            return $this->render('activity/testpaper/preview.html.twig', [
                 'paper' => null,
-            ));
+            ]);
         }
 
         $testpaperResult = $this->getTestpaperService()->getUserLatelyResultByTestId($user['id'], $testpaperActivity['mediaId'], $activity['fromCourseId'], $activity['id'], $activity['mediaType']);
 
         if (!$testpaperResult || ('doing' == $testpaperResult['status'] && !$testpaperResult['updateTime']) || 'open' != $testpaper['status']) {
-            return $this->render('activity/testpaper/show.html.twig', array(
+            return $this->render('activity/testpaper/show.html.twig', [
                 'activity' => $activity,
                 'testpaperActivity' => $testpaperActivity,
                 'testpaperResult' => $testpaperResult,
                 'testpaper' => $testpaper,
                 'courseId' => $activity['fromCourseId'],
-            ));
+            ]);
         } elseif ('finished' === $testpaperResult['status']) {
-            return $this->forward('AppBundle:Testpaper/Testpaper:showResult', array(
+            return $this->forward('AppBundle:Testpaper/Testpaper:showResult', [
                 'resultId' => $testpaperResult['id'],
-            ));
+            ]);
         }
 
-        return $this->forward('AppBundle:Testpaper/Testpaper:doTestpaper', array(
+        return $this->forward('AppBundle:Testpaper/Testpaper:doTestpaper', [
             'testId' => $testpaperActivity['mediaId'],
             'lessonId' => $activity['id'],
-        ));
+        ]);
     }
 
     public function previewAction(Request $request, $task)
@@ -59,29 +62,11 @@ class TestpaperController extends BaseActivityController implements ActivityActi
     {
         $activity = $this->getActivityService()->getActivity($id);
         $testpaperActivity = $this->getTestpaperActivityService()->getActivity($activity['mediaId']);
-        $testpaper = $this->getTestpaperService()->getTestpaperByIdAndType($testpaperActivity['mediaId'], $activity['mediaType']);
+        $assessment = $this->getAssessmentService()->showAssessment($testpaperActivity['mediaId']);
 
-        if (!$testpaper) {
-            return $this->render('activity/testpaper/preview.html.twig', array(
-                'paper' => null,
-            ));
-        }
-
-        $questions = $this->getTestpaperService()->showTestpaperItems($testpaper['id']);
-
-        $total = $this->getTestpaperService()->countQuestionTypes($testpaper, $questions);
-
-        $attachments = $this->getTestpaperService()->findAttachments($testpaper['id']);
-
-        return $this->render('activity/testpaper/preview.html.twig', array(
-            'questions' => $questions,
-            'limitedTime' => $testpaperActivity['limitedTime'],
-            'paper' => $testpaper,
-            'paperResult' => array(),
-            'total' => $total,
-            'attachments' => $attachments,
-            'questionTypes' => $this->getTestpaperService()->getCheckedQuestionTypeBySeq($testpaper),
-        ));
+        return $this->render('activity/testpaper/preview.html.twig', [
+            'assessment' => $assessment,
+        ]);
     }
 
     public function editAction(Request $request, $id, $courseId)
@@ -99,15 +84,15 @@ class TestpaperController extends BaseActivityController implements ActivityActi
 
         $testpapers = $this->findCourseTestpapers($course);
 
-        $features = $this->container->hasParameter('enabled_features') ? $this->container->getParameter('enabled_features') : array();
+        $features = $this->container->hasParameter('enabled_features') ? $this->container->getParameter('enabled_features') : [];
 
-        return $this->render('activity/testpaper/modal.html.twig', array(
+        return $this->render('activity/testpaper/modal.html.twig', [
             'activity' => $activity,
             'testpapers' => $testpapers,
             'features' => $features,
             'courseId' => $activity['fromCourseId'],
             'course' => $course,
-        ));
+        ]);
     }
 
     public function createAction(Request $request, $courseId)
@@ -115,22 +100,22 @@ class TestpaperController extends BaseActivityController implements ActivityActi
         $course = $this->getCourseService()->getCourse($courseId);
         $testpapers = $this->findCourseTestpapers($course);
 
-        $features = $this->container->hasParameter('enabled_features') ? $this->container->getParameter('enabled_features') : array();
+        $features = $this->container->hasParameter('enabled_features') ? $this->container->getParameter('enabled_features') : [];
 
-        return $this->render('activity/testpaper/modal.html.twig', array(
+        return $this->render('activity/testpaper/modal.html.twig', [
             'testpapers' => $testpapers,
             'features' => $features,
             'course' => $course,
-        ));
+        ]);
     }
 
     public function finishConditionAction(Request $request, $activity)
     {
         $testpaperActivity = $this->getTestpaperActivityService()->getActivity($activity['mediaId']);
 
-        return $this->render('activity/testpaper/finish-condition.html.twig', array(
+        return $this->render('activity/testpaper/finish-condition.html.twig', [
             'testpaperActivity' => $testpaperActivity,
-        ));
+        ]);
     }
 
     public function learnDataDetailAction(Request $request, $task)
@@ -138,9 +123,9 @@ class TestpaperController extends BaseActivityController implements ActivityActi
         $activity = $this->getActivityService()->getActivity($task['activityId'], true);
         $testpaper = $this->getTestpaperService()->getTestpaperByIdAndType($activity['ext']['mediaId'], $activity['mediaType']);
 
-        $conditions = array(
+        $conditions = [
             'courseTaskId' => $task['id'],
-        );
+        ];
 
         $paginator = new Paginator(
             $request,
@@ -150,32 +135,81 @@ class TestpaperController extends BaseActivityController implements ActivityActi
 
         $taskResults = $this->getTaskResultService()->searchTaskResults(
             $conditions,
-            array('createdTime' => 'ASC'),
+            ['createdTime' => 'ASC'],
             $paginator->getOffsetCount(),
             $paginator->getPerPageCount()
         );
 
         $userIds = ArrayToolkit::column($taskResults, 'userId');
         $users = $this->getUserService()->findUsersByIds($userIds);
-        $testpaperResults = $this->getTestpaperService()->findTestResultsByTestpaperIdAndUserIds($userIds, $testpaper['id']);
+        $testpaperResults = $this->getTestpaperResults($activity, $userIds);
 
-        return $this->render('activity/testpaper/learn-data-detail-modal.html.twig', array(
+        return $this->render('activity/testpaper/learn-data-detail-modal.html.twig', [
             'task' => $task,
             'taskResults' => $taskResults,
             'users' => $users,
             'testpaperResults' => $testpaperResults,
             'paginator' => $paginator,
-        ));
+        ]);
+    }
+
+    protected function getTestpaperResults($activity, $userIds)
+    {
+        $testpaperResults = [];
+        $answerRecords = $this->getAnswerRecords($activity['ext']['answerScene']['id'], $userIds);
+
+        foreach ($answerRecords as $userId => $userAnswerRecords) {
+            $userFirstRecord = $userAnswerRecords[0];
+            $scores = ArrayToolkit::column($userAnswerRecords, 'score');
+            $testpaperResults[$userId] = [
+                'usedTime' => round($userFirstRecord['used_time'] / 60, 1),
+                'firstScore' => $userFirstRecord['score'],
+                'maxScore' => max($scores),
+            ];
+        }
+
+        return $testpaperResults;
+    }
+
+    protected function getAnswerRecords($answerSceneId, $userIds)
+    {
+        $answerReports = $this->getAnswerReportService()->search(
+            ['answer_scene_id' => $answerSceneId],
+            [],
+            0,
+            $this->getAnswerReportService()->count(['answer_scene_id' => $answerSceneId]),
+            ['score', 'user_id', 'answer_record_id']
+        );
+        $answerReports = ArrayToolkit::index($answerReports, 'answer_record_id');
+
+        $conditions = [
+            'answer_scene_id' => $answerSceneId,
+            'user_ids' => $userIds,
+            'status' => 'finished',
+        ];
+        $answerRecords = $this->getAnswerRecordService()->search(
+            $conditions,
+            [],
+            0,
+            $this->getAnswerRecordService()->count($conditions),
+            ['user_id', 'used_time', 'id']
+        );
+        foreach ($answerRecords as &$answerRecord) {
+            $answerRecord['score'] = $answerReports[$answerRecord['id']]['score'];
+        }
+        $answerRecords = ArrayToolkit::group($answerRecords, 'user_id');
+
+        return $answerRecords;
     }
 
     protected function findCourseTestpapers($course)
     {
         $courseSet = $this->getCourseSetService()->getCourseSet($course['courseSetId']);
-        $conditions = array(
+        $conditions = [
             'courseSetId' => $course['courseSetId'],
             'status' => 'open',
             'type' => 'testpaper',
-        );
+        ];
 
         if ($courseSet['parentId'] > 0 && $courseSet['locked']) {
             $conditions['copyIdGT'] = 0;
@@ -183,7 +217,7 @@ class TestpaperController extends BaseActivityController implements ActivityActi
 
         $testpapers = $this->getTestpaperService()->searchTestpapers(
             $conditions,
-            array('createdTime' => 'DESC'),
+            ['createdTime' => 'DESC'],
             0,
             PHP_INT_MAX
         );
@@ -226,5 +260,29 @@ class TestpaperController extends BaseActivityController implements ActivityActi
     protected function getTestpaperActivityService()
     {
         return $this->createService('Activity:TestpaperActivityService');
+    }
+
+    /**
+     * @return AssessmentService
+     */
+    protected function getAssessmentService()
+    {
+        return $this->createService('ItemBank:Assessment:AssessmentService');
+    }
+
+    /**
+     * @return AnswerRecordService
+     */
+    protected function getAnswerRecordService()
+    {
+        return $this->createService('ItemBank:Answer:AnswerRecordService');
+    }
+
+    /**
+     * @return AnswerReportService
+     */
+    protected function getAnswerReportService()
+    {
+        return $this->createService('ItemBank:Answer:AnswerReportService');
     }
 }

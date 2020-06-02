@@ -33,16 +33,15 @@ final class DoctrineAnnotationBracesFixer extends AbstractDoctrineAnnotationFixe
     {
         return new FixerDefinition(
             'Doctrine annotations without arguments must use the configured syntax.',
-            array(
+            [
                 new CodeSample(
-                    "<?php\n/**\n * @Foo()\n */\nclass Bar {}",
-                    array('syntax' => 'without_braces')
+                    "<?php\n/**\n * @Foo()\n */\nclass Bar {}\n"
                 ),
                 new CodeSample(
-                    "<?php\n/**\n * @Foo\n */\nclass Bar {}",
-                    array('syntax' => 'with_braces')
+                    "<?php\n/**\n * @Foo\n */\nclass Bar {}\n",
+                    ['syntax' => 'with_braces']
                 ),
-            )
+            ]
         );
     }
 
@@ -51,16 +50,15 @@ final class DoctrineAnnotationBracesFixer extends AbstractDoctrineAnnotationFixe
      */
     protected function createConfigurationDefinition()
     {
-        $options = parent::createConfigurationDefinition()->getOptions();
-
-        $syntax = new FixerOptionBuilder('syntax', 'Whether to add or remove braces.');
-        $options[] = $syntax
-            ->setAllowedValues(array('with_braces', 'without_braces'))
-            ->setDefault('without_braces')
-            ->getOption()
-        ;
-
-        return new FixerConfigurationResolver($options);
+        return new FixerConfigurationResolver(array_merge(
+            parent::createConfigurationDefinition()->getOptions(),
+            [
+                (new FixerOptionBuilder('syntax', 'Whether to add or remove braces.'))
+                    ->setAllowedValues(['with_braces', 'without_braces'])
+                    ->setDefault('without_braces')
+                    ->getOption(),
+            ]
+        ));
     }
 
     /**
@@ -75,9 +73,6 @@ final class DoctrineAnnotationBracesFixer extends AbstractDoctrineAnnotationFixe
         }
     }
 
-    /**
-     * @param Tokens $tokens
-     */
     private function addBracesToAnnotations(Tokens $tokens)
     {
         foreach ($tokens as $index => $token) {
@@ -95,12 +90,9 @@ final class DoctrineAnnotationBracesFixer extends AbstractDoctrineAnnotationFixe
         }
     }
 
-    /**
-     * @param Tokens $tokens
-     */
     private function removesBracesFromAnnotations(Tokens $tokens)
     {
-        for ($index = 0, $max = count($tokens); $index < $max; ++$index) {
+        for ($index = 0, $max = \count($tokens); $index < $max; ++$index) {
             if (!$tokens[$index]->isType(DocLexer::T_AT)) {
                 continue;
             }

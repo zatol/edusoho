@@ -17,7 +17,6 @@ use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
-use PhpCsFixer\Utils;
 
 /**
  * @author Graham Campbell <graham@alt-three.com>
@@ -39,7 +38,7 @@ final class NoBlankLinesAfterPhpdocFixer extends AbstractFixer
     {
         return new FixerDefinition(
             'There should not be blank lines between docblock and the documented element.',
-            array(
+            [
                 new CodeSample(
                     '<?php
 
@@ -51,17 +50,19 @@ final class NoBlankLinesAfterPhpdocFixer extends AbstractFixer
 class Bar {}
 '
                 ),
-            )
+            ]
         );
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before HeaderCommentFixer, PhpdocAlignFixer, SingleBlankLineBeforeNamespaceFixer.
+     * Must run after CommentToPhpdocFixer, PhpdocIndentFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
      */
     public function getPriority()
     {
-        // should be ran before the SingleBlankLineBeforeNamespaceFixer.
-        return 1;
+        return -20;
     }
 
     /**
@@ -69,7 +70,7 @@ class Bar {}
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
-        static $forbiddenSuccessors = array(
+        static $forbiddenSuccessors = [
             T_DOC_COMMENT,
             T_COMMENT,
             T_WHITESPACE,
@@ -78,7 +79,9 @@ class Bar {}
             T_GOTO,
             T_CONTINUE,
             T_BREAK,
-        );
+            T_DECLARE,
+            T_USE,
+        ];
 
         foreach ($tokens as $index => $token) {
             if (!$token->isGivenKind(T_DOC_COMMENT)) {
@@ -88,7 +91,7 @@ class Bar {}
             // that there is whitespace between it and the current token
             $next = $tokens->getNextNonWhitespace($index);
             if ($index + 2 === $next && false === $tokens[$next]->isGivenKind($forbiddenSuccessors)) {
-                $this->fixWhitespace($tokens[$index + 1]);
+                $this->fixWhitespace($tokens, $index + 1);
             }
         }
     }
@@ -96,16 +99,15 @@ class Bar {}
     /**
      * Cleanup a whitespace token.
      *
-     * @param Token $token
+     * @param int $index
      */
-    private function fixWhitespace(Token $token)
+    private function fixWhitespace(Tokens $tokens, $index)
     {
-        $content = $token->getContent();
+        $content = $tokens[$index]->getContent();
         // if there is more than one new line in the whitespace, then we need to fix it
         if (substr_count($content, "\n") > 1) {
             // the final bit of the whitespace must be the next statement's indentation
-            $lines = Utils::splitLines($content);
-            $token->setContent("\n".end($lines));
+            $tokens[$index] = new Token([T_WHITESPACE, substr($content, strrpos($content, "\n"))]);
         }
     }
 }

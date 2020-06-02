@@ -12,19 +12,57 @@
 
 namespace PhpCsFixer\DocBlock;
 
+use PhpCsFixer\Preg;
+
 /**
  * This represents an entire annotation from a docblock.
  *
  * @author Graham Campbell <graham@alt-three.com>
+ * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
  */
 class Annotation
 {
+    /**
+     * Regex to match any types, shall be used with `x` modifier.
+     *
+     * @internal
+     */
+    const REGEX_TYPES = '
+    # <simple> is any non-array, non-generic, non-alternated type, eg `int` or `\Foo`
+    # <array> is array of <simple>, eg `int[]` or `\Foo[]`
+    # <generic> is generic collection type, like `array<string, int>`, `Collection<Item>` and more complex like `Collection<int, \null|SubCollection<string>>`
+    # <type> is <simple>, <array> or <generic> type, like `int`, `bool[]` or `Collection<ItemKey, ItemVal>`
+    # <types> is one or more types alternated via `|`, like `int|bool[]|Collection<ItemKey, ItemVal>`
+    (?<types>
+        (?<type>
+            (?<array>
+                (?&simple)(\[\])*
+            )
+            |
+            (?<simple>
+                [@$?]?[\\\\\w]+
+            )
+            |
+            (?<generic>
+                (?&simple)
+                <
+                    (?:(?&types),\s*)?(?:(?&types)|(?&generic))
+                >
+            )
+        )
+        (?:
+            \|
+            (?:(?&simple)|(?&array)|(?&generic))
+        )*
+    )
+    ';
+
     /**
      * All the annotation tag names with types.
      *
      * @var string[]
      */
-    private static $tags = array(
+    private static $tags = [
         'method',
         'param',
         'property',
@@ -34,7 +72,7 @@ class Annotation
         'throws',
         'type',
         'var',
-    );
+    ];
 
     /**
      * The lines that make up the annotation.
@@ -65,11 +103,18 @@ class Annotation
     private $tag;
 
     /**
-     * The cached types content.
+     * Lazy loaded, cached types content.
      *
      * @var string|null
      */
     private $typesContent;
+
+    /**
+     * The cached types.
+     *
+     * @var string[]|null
+     */
+    private $types;
 
     /**
      * Create a new line instance.
@@ -147,7 +192,24 @@ class Annotation
      */
     public function getTypes()
     {
-        return explode('|', $this->getTypesContent());
+        if (null === $this->types) {
+            $this->types = [];
+
+            $content = $this->getTypesContent();
+
+            while ('' !== $content && false !== $content) {
+                Preg::match(
+                    '{^'.self::REGEX_TYPES.'$}x',
+                    $content,
+                    $matches
+                );
+
+                $this->types[] = $matches['type'];
+                $content = substr($content, \strlen($matches['type']) + 1);
+            }
+        }
+
+        return $this->types;
     }
 
     /**
@@ -157,11 +219,27 @@ class Annotation
      */
     public function setTypes(array $types)
     {
-        $pattern = '/'.preg_quote($this->getTypesContent()).'/';
+        $pattern = '/'.preg_quote($this->getTypesContent(), '/').'/';
 
-        $this->lines[0]->setContent(preg_replace($pattern, implode('|', $types), $this->lines[0]->getContent(), 1));
+        $this->lines[0]->setContent(Preg::replace($pattern, implode('|', $types), $this->lines[0]->getContent(), 1));
 
-        $this->typesContent = null;
+        $this->clearCache();
+    }
+
+    /**
+     * Get the normalized types associated with this annotation, so they can easily be compared.
+     *
+     * @return string[]
+     */
+    public function getNormalizedTypes()
+    {
+        $normalized = array_map(static function ($type) {
+            return strtolower($type);
+        }, $this->getTypes());
+
+        sort($normalized);
+
+        return $normalized;
     }
 
     /**
@@ -172,6 +250,8 @@ class Annotation
         foreach ($this->lines as $line) {
             $line->remove();
         }
+
+        $this->clearCache();
     }
 
     /**
@@ -181,12 +261,12 @@ class Annotation
      */
     public function getContent()
     {
-        return implode($this->lines);
+        return implode('', $this->lines);
     }
 
     public function supportTypes()
     {
-        return in_array($this->getTag()->getName(), self::$tags, true);
+        return \in_array($this->getTag()->getName(), self::$tags, true);
     }
 
     /**
@@ -205,12 +285,23 @@ class Annotation
                 throw new \RuntimeException('This tag does not support types.');
             }
 
-            $tagSplit = preg_split('/\s*\@'.$name.'\s*/', $this->lines[0]->getContent(), 2);
-            $spaceSplit = preg_split('/\s/', $tagSplit[1], 2);
+            $matchingResult = Preg::match(
+                '{^(?:\s*\*|/\*\*)\s*@'.$name.'\s+'.self::REGEX_TYPES.'(?:\h.*)?$}sx',
+                $this->lines[0]->getContent(),
+                $matches
+            );
 
-            $this->typesContent = $spaceSplit[0];
+            $this->typesContent = 1 === $matchingResult
+                ? $matches['types']
+                : '';
         }
 
         return $this->typesContent;
+    }
+
+    private function clearCache()
+    {
+        $this->types = null;
+        $this->typesContent = null;
     }
 }

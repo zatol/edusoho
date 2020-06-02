@@ -257,15 +257,24 @@ class PayServiceImpl extends BaseService implements PayService
 
     protected function closeByPayment($data)
     {
-        $response = $this->getPayment($data['platform'])->closeTrade($data);
-        if (!empty($response) && !$response->isSuccessful()) {
-            $failData = $response->getMessage();
-            $this->getTargetlogService()->log(TargetlogService::INFO, 'trade.close_failed', $data['trade_sn'], "交易号{$data['trade_sn']}关闭失败,{$failData},(order_sn:{$data['order_sn']})", $data);
-        } else {
-            $this->getTargetlogService()->log(TargetlogService::INFO, 'trade.close', $data['trade_sn'], "交易号{$data['trade_sn']}关闭成功。(order_sn:{$data['order_sn']})", $data);
-        }
+        try {
+            $response = $this->getPayment($data['platform'])->closeTrade($data);
+            if (!empty($response) && !$response->isSuccessful()) {
+                if (method_exists($response, 'getFailData')) {
+                    $failData = $response->getFailData();
+                } else {
+                    $failData = $response->getMessage();
+                }
+                $this->getTargetlogService()->log(TargetlogService::INFO, 'trade.close_failed', $data['trade_sn'], "交易号{$data['trade_sn']}关闭失败,{$failData},(order_sn:{$data['order_sn']})", $data);
+            } else {
+                $this->getTargetlogService()->log(TargetlogService::INFO, 'trade.close', $data['trade_sn'], "交易号{$data['trade_sn']}关闭成功。(order_sn:{$data['order_sn']})", $data);
+            }
 
-        return $response;
+            return $response;
+        } catch (\Exception $e) {
+            $this->getTargetlogService()->log(TargetlogService::INFO, 'trade.close_failed', $data['trade_sn'], "交易号{$data['trade_sn']}关闭失败,{$e->getMessage()},(order_sn:{$data['order_sn']})", $data);
+            return null;
+        }
     }
 
     protected function updateTradeToPaidAndTransferAmount($data)
@@ -305,6 +314,7 @@ class PayServiceImpl extends BaseService implements PayService
             } catch (\Exception $e) {
                 $this->rollback();
                 $this->getTargetlogService()->log(TargetlogService::INFO, 'pay.error', $data['trade_sn'], "交易号{$data['trade_sn']}处理失败, {$e->getMessage()}", $data);
+                throw $e;
             }
 
             $this->dispatch('payment_trade.paid', $trade, $data);

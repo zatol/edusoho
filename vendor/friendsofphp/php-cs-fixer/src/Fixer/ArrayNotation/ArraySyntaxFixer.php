@@ -23,8 +23,6 @@ use PhpCsFixer\FixerDefinition\VersionSpecificCodeSample;
 use PhpCsFixer\Tokenizer\CT;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Symfony\Component\OptionsResolver\Options;
 
 /**
  * @author Gregor Harlan <gharlan@web.de>
@@ -54,27 +52,27 @@ final class ArraySyntaxFixer extends AbstractFixer implements ConfigurationDefin
     public function getDefinition()
     {
         return new FixerDefinition(
-            'PHP arrays should be declared using the configured syntax (requires PHP >= 5.4 for short syntax).',
-            array(
+            'PHP arrays should be declared using the configured syntax.',
+            [
                 new CodeSample(
-                    "<?php\n[1,2];",
-                    array('syntax' => 'long')
+                    "<?php\n[1,2];\n"
                 ),
                 new VersionSpecificCodeSample(
-                    "<?php\narray(1,2);",
+                    "<?php\narray(1,2);\n",
                     new VersionSpecification(50400),
-                    array('syntax' => 'short')
+                    ['syntax' => 'short']
                 ),
-            )
+            ]
         );
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before BinaryOperatorSpacesFixer, TernaryOperatorSpacesFixer.
      */
     public function getPriority()
     {
-        // should be run before the BinaryOperatorSpacesFixer and TernaryOperatorSpacesFixer.
         return 1;
     }
 
@@ -94,7 +92,7 @@ final class ArraySyntaxFixer extends AbstractFixer implements ConfigurationDefin
         $callback = $this->fixCallback;
         for ($index = $tokens->count() - 1; 0 <= $index; --$index) {
             if ($tokens[$index]->isGivenKind($this->candidateTokenKind)) {
-                $this->$callback($tokens, $index);
+                $this->{$callback}($tokens, $index);
             }
         }
     }
@@ -104,51 +102,37 @@ final class ArraySyntaxFixer extends AbstractFixer implements ConfigurationDefin
      */
     protected function createConfigurationDefinition()
     {
-        $syntax = new FixerOptionBuilder('syntax', 'Whether to use the `long` or `short` array syntax.');
-        $syntax = $syntax
-            ->setAllowedValues(array('long', 'short'))
-            ->setNormalizer(function (Options $options, $value) {
-                if (PHP_VERSION_ID < 50400 && 'short' === $value) {
-                    throw new InvalidOptionsException(sprintf(
-                        'Short array syntax is supported from PHP5.4 (your PHP version is %d).',
-                        PHP_VERSION_ID
-                    ));
-                }
-
-                return $value;
-            })
-            ->setDefault('long')
-            ->getOption()
-        ;
-
-        return new FixerConfigurationResolver(array($syntax));
+        return new FixerConfigurationResolver([
+            (new FixerOptionBuilder('syntax', 'Whether to use the `long` or `short` array syntax.'))
+                ->setAllowedValues(['long', 'short'])
+                ->setDefault('long')
+                ->getOption(),
+        ]);
     }
 
     /**
-     * @param Tokens $tokens
-     * @param int    $index
+     * @param int $index
      */
     private function fixToLongArraySyntax(Tokens $tokens, $index)
     {
         $closeIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_ARRAY_SQUARE_BRACE, $index);
 
-        $tokens->overrideAt($index, '(');
-        $tokens->overrideAt($closeIndex, ')');
+        $tokens[$index] = new Token('(');
+        $tokens[$closeIndex] = new Token(')');
 
-        $tokens->insertAt($index, new Token(array(T_ARRAY, 'array')));
+        $tokens->insertAt($index, new Token([T_ARRAY, 'array']));
     }
 
     /**
-     * @param Tokens $tokens
-     * @param int    $index
+     * @param int $index
      */
     private function fixToShortArraySyntax(Tokens $tokens, $index)
     {
-        $openIndex = $tokens->getNextTokenOfKind($index, array('('));
+        $openIndex = $tokens->getNextTokenOfKind($index, ['(']);
         $closeIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $openIndex);
 
-        $tokens->overrideAt($openIndex, array(CT::T_ARRAY_SQUARE_BRACE_OPEN, '['));
-        $tokens->overrideAt($closeIndex, array(CT::T_ARRAY_SQUARE_BRACE_CLOSE, ']'));
+        $tokens[$openIndex] = new Token([CT::T_ARRAY_SQUARE_BRACE_OPEN, '[']);
+        $tokens[$closeIndex] = new Token([CT::T_ARRAY_SQUARE_BRACE_CLOSE, ']']);
 
         $tokens->clearTokenAndMergeSurroundingWhitespace($index);
     }

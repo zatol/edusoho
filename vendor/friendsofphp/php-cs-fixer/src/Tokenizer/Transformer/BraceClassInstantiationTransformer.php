@@ -32,7 +32,16 @@ final class BraceClassInstantiationTransformer extends AbstractTransformer
      */
     public function getCustomTokens()
     {
-        return array(CT::T_BRACE_CLASS_INSTANTIATION_OPEN, CT::T_BRACE_CLASS_INSTANTIATION_CLOSE);
+        return [CT::T_BRACE_CLASS_INSTANTIATION_OPEN, CT::T_BRACE_CLASS_INSTANTIATION_CLOSE];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPriority()
+    {
+        // must run after CurlyBraceTransformer and SquareBraceTransformer
+        return -2;
     }
 
     /**
@@ -48,17 +57,32 @@ final class BraceClassInstantiationTransformer extends AbstractTransformer
      */
     public function process(Tokens $tokens, Token $token, $index)
     {
-        if (!$tokens[$index]->equals('(') || !$tokens[$tokens->getNextMeaningfulToken($index)]->equals(array(T_NEW))) {
+        if (!$tokens[$index]->equals('(') || !$tokens[$tokens->getNextMeaningfulToken($index)]->equals([T_NEW])) {
+            return;
+        }
+
+        if ($tokens[$tokens->getPrevMeaningfulToken($index)]->equalsAny([
+            ']',
+            [CT::T_ARRAY_INDEX_CURLY_BRACE_CLOSE],
+            [CT::T_ARRAY_SQUARE_BRACE_CLOSE],
+            [T_ARRAY],
+            [T_CLASS],
+            [T_ELSEIF],
+            [T_FOR],
+            [T_FOREACH],
+            [T_IF],
+            [T_STATIC],
+            [T_STRING],
+            [T_SWITCH],
+            [T_VARIABLE],
+            [T_WHILE],
+        ])) {
             return;
         }
 
         $closeIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $index);
 
-        if (!$tokens[$tokens->getNextMeaningfulToken($closeIndex)]->isGivenKind(array(T_OBJECT_OPERATOR, T_DOUBLE_COLON))) {
-            return;
-        }
-
-        $tokens[$index]->override(array(CT::T_BRACE_CLASS_INSTANTIATION_OPEN, '('));
-        $tokens[$closeIndex]->override(array(CT::T_BRACE_CLASS_INSTANTIATION_CLOSE, ')'));
+        $tokens[$index] = new Token([CT::T_BRACE_CLASS_INSTANTIATION_OPEN, '(']);
+        $tokens[$closeIndex] = new Token([CT::T_BRACE_CLASS_INSTANTIATION_CLOSE, ')']);
     }
 }

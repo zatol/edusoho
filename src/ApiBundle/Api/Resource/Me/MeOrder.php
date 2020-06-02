@@ -5,6 +5,7 @@ namespace ApiBundle\Api\Resource\Me;
 use ApiBundle\Api\ApiRequest;
 use ApiBundle\Api\Resource\AbstractResource;
 use ApiBundle\Api\Annotation\ResponseFilter;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class MeOrder extends AbstractResource
 {
@@ -26,11 +27,10 @@ class MeOrder extends AbstractResource
 
         foreach ($orders as &$order) {
             $product = $this->getProduct($order['id']);
-            $covers = $product->cover;
-            $order['cover'] = count($covers) ? $covers : array('middle' => '');
+            $order['cover'] = empty($product->cover) ? array('middle' => '') : $product->cover;
             $order['targetType'] = $product->targetType;
             $order['targetId'] = $product->targetId;
-            $order['targetUrl'] = $this->generateUrl($product->successUrl[0], $product->successUrl[1], true);
+            $order['targetUrl'] = $this->generateUrl($product->successUrl[0], $product->successUrl[1], UrlGeneratorInterface::ABSOLUTE_URL);
         }
         $total = $this->getOrderService()->countOrders($conditions);
 
